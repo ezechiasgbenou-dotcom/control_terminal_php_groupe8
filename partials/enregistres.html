@@ -1,0 +1,95 @@
+<!-- Partial : Publications enregistrées -->
+<style>
+  .saved-page-wrapper {
+    max-width: 660px; 
+    margin: 0 auto; 
+    padding: 24px;
+  }
+  .saved-title {
+    font-size: var(--fs-xl); 
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  /* Ajustements d'espacements textuels globaux pour le confort visuel */
+  .post-body {
+    line-height: 1.55 !important; /* Interligne plus aéré pour la lecture */
+    font-size: 0.98rem;
+  }
+
+  @media (max-width: 600px) {
+    .saved-page-wrapper {
+      padding: 16px 12px !important; /* Réduction des marges extérieures pour donner de l'espace au contenu */
+    }
+    .saved-title {
+      font-size: 1.4rem !important;
+      margin-bottom: 16px !important;
+    }
+  }
+</style>
+
+<div class="saved-page-wrapper">
+  <h1 class="saved-title">
+    <i class="ph-fill ph-bookmark-simple" style="color:var(--color-accent)"></i> Publications enregistrées
+  </h1>
+  <div id="savedContainer">
+    <div class="card post skeleton" style="height:160px;margin-bottom:16px"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  requireClientAuth();
+  setLayout('centered');
+  var me = getStoredUser();
+  document.getElementById('col-right').innerHTML='';
+
+  async function loadSaved() {
+    var container=document.getElementById('savedContainer');
+    try {
+      var data=await apiCall('posts/saved.php');
+      container.innerHTML='';
+      if (!data.posts.length){
+        container.innerHTML='<div class="card" style="padding:48px;text-align:center;color:var(--color-text-muted)"><i class="ph ph-bookmark-simple" style="font-size:48px;display:block;margin-bottom:12px"></i><p>Aucune publication enregistrée.</p><p style="font-size:var(--fs-sm);margin-top:8px">Cliquez sur <strong>Enregistrer</strong> sous une publication pour la retrouver ici.</p><button class="btn btn-primary" style="margin-top:16px" onclick="Router.navigate(\'accueil\')">Explorer le fil</button></div>';
+        return;
+      }
+      data.posts.forEach(function(p){ container.appendChild(renderSaved(p)); });
+    } catch(err){ container.innerHTML='<p style="color:var(--color-danger)">'+err.message+'</p>'; }
+  }
+
+  function renderSaved(p){
+    var profileUrl=p.user_id==me.id?'#profil':'#profil-public?id='+p.user_id;
+    var article=document.createElement('article');
+    article.className='card post'; article.dataset.postId=p.id;
+    article.innerHTML=
+      '<div class="post-header">' +
+        '<a href="'+profileUrl+'"><img class="avatar" src="'+avatarUrl(p.avatar)+'" width="46" height="46" alt=""></a>' +
+        '<div class="post-author"><div class="name"><a href="'+profileUrl+'" style="color:inherit;text-decoration:none">'+p.first_name+' '+p.last_name+'</a></div><div class="meta">'+timeAgo(p.created_at)+'</div></div>' +
+        '<button class="btn-icon" title="Retirer" onclick="unsave('+p.id+',this)" style="color:var(--color-accent)"><i class="ph-fill ph-bookmark-simple"></i></button>' +
+      '</div>' +
+      '<div class="post-body"></div>' +
+      (p.image?'<div class="post-image"><img src="'+avatarUrl(p.image)+'" alt=""></div>':'') +
+      '<div class="post-stats"><div class="reactions"><span class="reaction-bubble"><i class="ph-fill ph-heart" style="font-size:10px"></i></span><span>'+p.like_count+' réaction(s)</span></div><span>'+p.comment_count+' commentaire(s)</span></div>' +
+      '<div class="post-buttons">' +
+        '<button class="post-action '+(p.liked_by_me?'liked':'')+'" onclick="toggleLike(this)"><i class="ph ph-heart"></i><span>J\'aime</span><span class="like-count" data-count="'+p.like_count+'" style="display:none"></span></button>' +
+        '<button class="post-action" onclick="toggleComments(this)"><i class="ph ph-chat-circle"></i><span>Commenter</span></button>' +
+      '</div>' +
+      '<div class="comments"><div class="comment-list"></div><form class="comment-form" onsubmit="submitComment(this,event)"><input type="text" placeholder="Écrire un commentaire…"><button type="submit"><i class="ph-fill ph-paper-plane-tilt" style="font-size:14px"></i></button></form></div>';
+    article.querySelector('.post-body').textContent=p.content;
+    return article;
+  }
+
+  window.unsave = async function(postId, btn){
+    try {
+      await apiCall('posts/save.php',{method:'POST',body:{post_id:postId}});
+      var article=btn.closest('.post');
+      article.style.transition='opacity 300ms ease'; article.style.opacity='0';
+      setTimeout(function(){ article.remove(); if(!document.querySelector('.post')) loadSaved(); },300);
+      showToast('Retiré des enregistrements','ph-check-circle');
+    } catch(err){ showToast(err.message,'ph-warning-circle'); }
+  };
+
+  loadSaved();
+})();
+</script>

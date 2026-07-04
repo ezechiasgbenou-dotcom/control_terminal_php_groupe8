@@ -1,0 +1,250 @@
+<!-- Partial : Mon profil -->
+
+<div class="cover">
+  <img id="coverImg" src="assets/images/default-cover.jpg" alt="">
+  <label class="btn btn-ghost cover-edit" style="cursor:pointer;position:absolute;bottom:16px;right:16px;z-index:2">
+    <i class="ph ph-camera"></i> Changer la couverture
+    <input type="file" id="coverInput" accept="image/*" style="display:none" onchange="uploadPhoto('cover',this)">
+  </label>
+</div>
+
+<div class="profile-header">
+  <div class="profile-avatar-wrap">
+    <img id="profileAvatarImg" src="assets/images/default-avatar.png" alt="">
+    <label class="profile-avatar-edit" title="Changer la photo">
+      <i class="ph ph-camera" style="font-size:14px"></i>
+      <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadPhoto('avatar',this)">
+    </label>
+  </div>
+  <div class="profile-meta">
+    <h1 id="profileName">…</h1>
+    <div class="sub" id="profileSub">…</div>
+  </div>
+  <button class="btn btn-primary" style="margin-bottom:20px" onclick="document.getElementById('editForm').scrollIntoView({behavior:'smooth'})">
+    <i class="ph ph-pencil-simple"></i> Modifier le profil
+  </button>
+</div>
+
+<div class="profile-tabs">
+  <div class="profile-tab active" onclick="switchTab('posts',this)">Publications</div>
+  <div class="profile-tab" onclick="switchTab('about',this)">À propos</div>
+  <div class="profile-tab" onclick="switchTab('friends',this)">Amis</div>
+  <div class="profile-tab" onclick="switchTab('photos',this)">Photos</div>
+</div>
+
+<div class="profile-body">
+  <aside>
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <h4 style="margin-bottom:8px">À propos</h4>
+      <div class="info-row"><i class="ph ph-briefcase"></i><span id="aboutJob">—</span></div>
+      <div class="info-row"><i class="ph ph-graduation-cap"></i><span id="aboutSchool">—</span></div>
+      <div class="info-row"><i class="ph ph-map-pin"></i><span id="aboutCity">—</span></div>
+      <div class="info-row"><i class="ph ph-calendar-blank"></i><span id="aboutJoined">—</span></div>
+    </div>
+    <form class="card form-modal" id="editForm">
+      <h4 style="margin-bottom:16px">Modifier le profil</h4>
+      <div class="field"><label>Prénom</label><input type="text" id="fFirstName"></div>
+      <div class="field"><label>Nom</label><input type="text" id="fLastName"></div>
+      <div class="field"><label>Bio</label><textarea rows="3" id="fBio"></textarea></div>
+      <div class="field"><label>Métier</label><input type="text" id="fJob"></div>
+      <div class="field"><label>École</label><input type="text" id="fSchool"></div>
+      <div class="field"><label>Ville</label><input type="text" id="fCity"></div>
+      <div class="field"><label>Nouveau mot de passe</label><input type="password" id="fPassword" placeholder="Laisser vide pour ne pas changer"></div>
+      <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
+    </form>
+  </aside>
+
+  <main>
+    <div class="tab-content active" id="tab-posts">
+      <div id="profilePostsContainer"><div class="card post skeleton" style="height:160px"></div></div>
+    </div>
+    <div class="tab-content" id="tab-about">
+      <div class="card" style="padding:24px">
+        <h4 style="margin-bottom:16px">À propos</h4>
+        <div class="info-row"><i class="ph ph-briefcase"></i><span id="aboutJob2">—</span></div>
+        <div class="info-row"><i class="ph ph-graduation-cap"></i><span id="aboutSchool2">—</span></div>
+        <div class="info-row"><i class="ph ph-map-pin"></i><span id="aboutCity2">—</span></div>
+        <div class="info-row"><i class="ph ph-calendar-blank"></i><span id="aboutJoined2">—</span></div>
+        <div class="info-row"><i class="ph ph-text-align-left"></i><span id="aboutBio2" style="font-style:italic">—</span></div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-friends">
+      <div id="friendsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px"></div>
+    </div>
+    <div class="tab-content" id="tab-photos">
+      <div id="photosGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  requireClientAuth();
+  setLayout('wide');
+  var me = getStoredUser();
+
+  // Vide la colonne droite (pas utilisée sur le profil)
+  document.getElementById('col-right').innerHTML = '';
+
+  function fillProfile(p) {
+    document.getElementById('navAvatar').src = avatarUrl(p.avatar);
+    document.getElementById('coverImg').src = p.cover ? avatarUrl(p.cover) : 'assets/images/default-cover.jpg';
+    document.getElementById('profileAvatarImg').src = avatarUrl(p.avatar);
+    document.getElementById('profileName').textContent = p.first_name + ' ' + p.last_name;
+    document.getElementById('profileSub').textContent = p.friend_count + ' ami' + (p.friend_count>1?'s':'') + (p.city?' · '+p.city:'');
+    var joined = 'A rejoint Lien le ' + new Date(p.created_at.replace(' ','T')).toLocaleDateString('fr-FR');
+    ['aboutJob','aboutJob2'].forEach(function(id){ document.getElementById(id).textContent = p.job||'Non renseigné'; });
+    ['aboutSchool','aboutSchool2'].forEach(function(id){ document.getElementById(id).textContent = p.school||'Non renseigné'; });
+    ['aboutCity','aboutCity2'].forEach(function(id){ document.getElementById(id).textContent = p.city||'Non renseigné'; });
+    ['aboutJoined','aboutJoined2'].forEach(function(id){ document.getElementById(id).textContent = joined; });
+    document.getElementById('aboutBio2').textContent = p.bio||'Aucune biographie renseignée.';
+    document.getElementById('fFirstName').value = p.first_name;
+    document.getElementById('fLastName').value  = p.last_name;
+    document.getElementById('fBio').value        = p.bio||'';
+    document.getElementById('fJob').value        = p.job||'';
+    document.getElementById('fSchool').value     = p.school||'';
+    document.getElementById('fCity').value       = p.city||'';
+  }
+
+  async function loadProfile() {
+    try { var data = await apiCall('profile/get.php'); fillProfile(data.profile); }
+    catch(err) { showToast(err.message,'ph-warning-circle'); }
+  }
+
+  async function loadMyPosts() {
+    var container = document.getElementById('profilePostsContainer');
+    try {
+      var data = await apiCall('posts/list.php?user_id=' + me.id);
+      container.innerHTML = '';
+      if (!data.posts.length) { container.innerHTML='<div class="card" style="padding:32px;text-align:center;color:var(--color-text-muted)">Aucune publication.</div>'; return; }
+      data.posts.forEach(function(p){ container.appendChild(buildPost(p)); });
+    } catch(err) { container.innerHTML='<p style="color:var(--color-danger)">'+err.message+'</p>'; }
+  }
+
+  function buildPost(p) {
+    var article = document.createElement('article');
+    article.className='card post'; article.dataset.postId=p.id;
+    article.innerHTML =
+      '<div class="post-header">' +
+        '<img class="avatar" src="'+avatarUrl(p.avatar)+'" width="46" height="46" alt="">' +
+        '<div class="post-author"><div class="name">'+p.first_name+' '+p.last_name+'</div><div class="meta">'+timeAgo(p.created_at)+'</div></div>' +
+        '<div style="position:relative; margin-left:auto;"><button class="btn-icon" onclick="togglePostMenu(this)"><i style="font-weight:bold;" class="ph ph-dots-three"></i></button>' +
+        '<div class="post-menu card" style="display:none;position:absolute;right:0;top:36px;z-index:100;min-width:160px;padding:6px;box-shadow:var(--shadow-lg)">' +
+        '<button class="sidebar-link" style="width:100%;color:var(--color-danger)" onclick="deletePost('+p.id+',this)"><i class="ph ph-trash"></i> Supprimer</button></div></div>' +
+      '</div>' +
+      '<div class="post-body"></div>' +
+      (p.image?'<div class="post-image"><img src="'+avatarUrl(p.image)+'" alt=""></div>':'') +
+      '<div class="post-stats"><div class="reactions"><span class="reaction-bubble" ><i class="ph-fill ph-heart" style="font-size:10px"></i></span><span class="like-count-label">'+p.like_count+' réaction(s)</span></div><span class="comment-count-label">'+p.comment_count+' commentaire(s)</span></div>' +
+      '<div class="post-buttons">' +
+        '<button class="post-action '+(p.liked_by_me?'liked':'')+'" onclick="toggleLike(this)"><i class="ph '+(p.liked_by_me?'ph-fill':'')+' ph-heart"></i><span>J\'aime</span><span class="like-count" data-count="'+p.like_count+'" style="display:none"></span></button>' +
+        '<button class="post-action" onclick="toggleComments(this)"><i class="ph ph-chat-circle"></i><span>Commenter</span></button>' +
+      '</div>' +
+      '<div class="comments"><div class="comment-list"></div>' +
+        '<form class="comment-form" onsubmit="submitComment(this,event)">' +
+          '<input type="text" placeholder="Écrire un commentaire…">' +
+          '<button type="submit"><i class="ph-fill ph-paper-plane-tilt" style="font-size:14px"></i></button>' +
+        '</form></div>';
+    article.querySelector('.post-body').textContent = p.content;
+    return article;
+  }
+
+  window.uploadPhoto = async function(field, input) {
+    if (!input.files[0]) return;
+    var form = new FormData(); form.append(field, input.files[0]);
+    try {
+      var data = await apiCall('profile/update.php', { method:'POST', body:form });
+      setSession(getToken(), data.user);
+      fillProfile(Object.assign(data.user, { friend_count: 0 }));
+      loadProfile();
+      showToast('Photo mise à jour','ph-check-circle');
+    } catch(err) { showToast(err.message,'ph-warning-circle'); }
+  };
+
+  document.getElementById('editForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var btn = e.target.querySelector('button[type=submit]');
+    btn.disabled=true; btn.textContent='Enregistrement…';
+    try {
+      var body = {
+        first_name: document.getElementById('fFirstName').value,
+        last_name:  document.getElementById('fLastName').value,
+        bio:        document.getElementById('fBio').value,
+        job:        document.getElementById('fJob').value,
+        school:     document.getElementById('fSchool').value,
+        city:       document.getElementById('fCity').value,
+      };
+      var pwd = document.getElementById('fPassword').value;
+      if (pwd) body.password = pwd;
+      var data = await apiCall('profile/update.php', { method:'POST', body:body });
+      setSession(getToken(), data.user);
+      document.getElementById('fPassword').value='';
+      showToast('Profil mis à jour','ph-check-circle');
+      loadProfile();
+    } catch(err) { showToast(err.message,'ph-warning-circle'); }
+    finally { btn.disabled=false; btn.textContent='Enregistrer'; }
+  });
+
+  window.switchTab = function(name, el) {
+    document.querySelectorAll('.profile-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('tab-'+name).classList.add('active');
+    if (name==='friends') loadProfileFriends();
+    if (name==='photos')  loadProfilePhotos();
+  };
+
+  async function loadProfileFriends() {
+    var grid = document.getElementById('friendsGrid');
+    if (grid.dataset.loaded) return;
+    try {
+      var data = await apiCall('friends/list.php');
+      var friends = data.users.filter(function(u){ return u.status==='accepted'; });
+      grid.innerHTML = friends.length ? '' : '<p style="color:var(--color-text-muted)">Pas encore d\'amis.</p>';
+      friends.forEach(function(u){
+        var div=document.createElement('div'); div.className='card'; div.style.cssText='padding:12px;text-align:center;cursor:pointer';
+        div.onclick=function(){ Router.navigate('profil-public',{id:u.id}); };
+        div.innerHTML='<img class="avatar" src="'+avatarUrl(u.avatar)+'" width="72" height="72" style="margin:0 auto 8px" alt=""><div style="font-weight:600;font-size:var(--fs-sm)">'+u.first_name+' '+u.last_name+'</div><div style="font-size:var(--fs-xs);color:var(--color-text-muted)">'+( u.city||'')+'</div>';
+        grid.appendChild(div);
+      });
+      grid.dataset.loaded='1';
+    } catch(err) {}
+  }
+
+  async function loadProfilePhotos() {
+    var grid = document.getElementById('photosGrid');
+    if (grid.dataset.loaded) return;
+    try {
+      var data = await apiCall('posts/list.php?user_id='+me.id);
+      var photos = data.posts.filter(function(p){ return p.image; });
+      grid.innerHTML = photos.length ? '' : '<p style="color:var(--color-text-muted)">Aucune photo.</p>';
+      photos.forEach(function(p){
+        var a=document.createElement('a'); a.href=avatarUrl(p.image); a.target='_blank';
+        a.innerHTML='<img src="'+avatarUrl(p.image)+'" alt="" style="width:100%;height:160px;object-fit:cover;border-radius:var(--radius-sm)">';
+        grid.appendChild(a);
+      });
+      grid.dataset.loaded='1';
+    } catch(err) {}
+  }
+
+  window.deletePost = async function(postId, btn) {
+    if (!confirm('Supprimer cette publication ?')) return;
+    btn.disabled=true;
+    try {
+      await apiCall('posts/delete.php',{method:'POST',body:{post_id:postId}});
+      var article=btn.closest('.post');
+      article.style.transition='opacity 300ms ease'; article.style.opacity='0';
+      setTimeout(function(){ article.remove(); },300);
+      showToast('Publication supprimée','ph-check-circle');
+    } catch(err){ showToast(err.message,'ph-warning-circle'); btn.disabled=false; }
+  };
+
+  window.togglePostMenu = function(btn) {
+    var menu=btn.parentElement.querySelector('.post-menu');
+    menu.style.display=menu.style.display==='none'?'block':'none';
+    setTimeout(function(){ var c=function(e){ if(!btn.parentElement.contains(e.target)){menu.style.display='none'; document.removeEventListener('click',c);} }; document.addEventListener('click',c); },0);
+  };
+
+  loadProfile();
+  loadMyPosts();
+})();
+</script>

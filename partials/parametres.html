@@ -1,0 +1,146 @@
+<!-- Partial : Paramètres -->
+ <style>
+  /* Optimisation de la fluidité de la page paramètres */
+  @media (max-width: 880px) {
+    .settings-wrap {
+      grid-template-columns: 1fr !important; /* On passe sur une seule colonne */
+      gap: 20px !important;
+    }
+
+    .settings-nav {
+      display: flex !important;
+      flex-direction: row !important; /* Le menu devient horizontal */
+      gap: 6px !important;
+      overflow-x: auto !important;
+      white-space: nowrap !important;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+      scrollbar-width: none;
+    }
+
+    .settings-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .settings-nav .sidebar-link {
+      flex-shrink: 0 !important;
+      justify-content: center !important;
+      padding: 10px 16px !important;
+    }
+    
+    /* Élargissement des formulaires pour occuper tout le confort de l'écran mobile */
+    .settings-section .card {
+      padding: 16px !important;
+    }
+    
+    /* Les champs Prénom / Nom s'empilent proprement sur petit mobile */
+    #accountForm > div[style*="display:flex"] {
+      flex-direction: column !important;
+      gap: 0px !important;
+    }
+  }
+</style>
+<div class="settings-wrap">
+  <nav class="settings-nav">
+    <button class="sidebar-link active" onclick="showSection('compte',this)"><i class="ph ph-user-circle"></i><span>Compte</span></button>
+    <button class="sidebar-link" onclick="showSection('securite',this)"><i class="ph ph-lock-key"></i><span>Sécurité</span></button>
+    <button class="sidebar-link" onclick="showSection('confidentialite',this)"><i class="ph ph-eye-slash"></i><span>Confidentialité</span></button>
+  </nav>
+  <main>
+    <div class="settings-section active" id="sect-compte">
+      <h2 style="font-size:var(--fs-xl);margin-bottom:24px">Mon compte</h2>
+      <form class="card" style="padding:24px" id="accountForm">
+        <div style="display:flex;gap:12px">
+          <div class="field" style="flex:1"><label>Prénom</label><input class="champ" type="text" id="sFirstName"></div>
+          <div class="field" style="flex:1"><label>Nom</label><input class="champ" type="text" id="sLastName"></div>
+        </div>
+        <div class="field"><label>Bio</label><textarea rows="3" id="sBio"></textarea></div>
+        <div class="field"><label>Métier</label><input type="text" id="sJob"></div>
+        <div class="field"><label>École</label><input type="text" id="sSchool"></div>
+        <div class="field"><label>Ville</label><input type="text" id="sCity"></div>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </form>
+    </div>
+    <div class="settings-section" id="sect-securite">
+      <h2 style="font-size:var(--fs-xl);margin-bottom:24px">Sécurité</h2>
+      <form class="card" style="padding:24px" id="passwordForm">
+        <div class="field"><label>Nouveau mot de passe</label><input type="password" id="sPassword" minlength="8" placeholder="8 caractères minimum"></div>
+        <div class="field"><label>Confirmer</label><input type="password" id="sPassword2"></div>
+        <button type="submit" class="btn btn-primary">Changer le mot de passe</button>
+      </form>
+      <div class="danger-zone">
+        <h4><i class="ph ph-warning"></i> Zone de danger</h4>
+        <p style="font-size:var(--fs-sm);color:var(--color-text-secondary);margin-bottom:12px">La suppression est définitive et irréversible.</p>
+        <button class="btn btn-ghost" style="color:var(--color-danger)" onclick="deleteAccount()">Supprimer mon compte</button>
+      </div>
+    </div>
+    <div class="settings-section" id="sect-confidentialite">
+      <h2 style="font-size:var(--fs-xl);margin-bottom:24px">Confidentialité</h2>
+      <div class="card" style="padding:24px"><p style="color:var(--color-text-secondary)">Vous pouvez choisir la visibilité de chaque publication (Public ou Amis) lors de sa création.</p></div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  requireClientAuth();
+  setLayout('wide');
+  document.getElementById('col-right').innerHTML='';
+
+  window.showSection = function(id, btn){
+    document.querySelectorAll('.settings-section').forEach(function(s){ s.classList.remove('active'); });
+    document.querySelectorAll('.settings-nav button').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('sect-'+id).classList.add('active');
+    btn.classList.add('active');
+  };
+
+  async function loadProfile(){
+    var data=await apiCall('profile/get.php'); var p=data.profile;
+    document.getElementById('sFirstName').value=p.first_name;
+    document.getElementById('sLastName').value=p.last_name;
+    document.getElementById('sBio').value=p.bio||'';
+    document.getElementById('sJob').value=p.job||'';
+    document.getElementById('sSchool').value=p.school||'';
+    document.getElementById('sCity').value=p.city||'';
+  }
+
+  document.getElementById('accountForm').addEventListener('submit',async function(e){
+    e.preventDefault(); var btn=e.target.querySelector('button'); btn.disabled=true;
+    try{
+      var data=await apiCall('profile/update.php',{method:'POST',body:{
+        first_name:document.getElementById('sFirstName').value,
+        last_name:document.getElementById('sLastName').value,
+        bio:document.getElementById('sBio').value,
+        job:document.getElementById('sJob').value,
+        school:document.getElementById('sSchool').value,
+        city:document.getElementById('sCity').value,
+      }});
+      setSession(getToken(),data.user);
+      showToast('Compte mis à jour','ph-check-circle');
+    }catch(err){showToast(err.message,'ph-warning-circle');}
+    finally{btn.disabled=false;}
+  });
+
+  document.getElementById('passwordForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    var p1=document.getElementById('sPassword').value;
+    var p2=document.getElementById('sPassword2').value;
+    if(p1!==p2){showToast('Les mots de passe ne correspondent pas.','ph-warning-circle');return;}
+    var btn=e.target.querySelector('button'); btn.disabled=true;
+    try{
+      await apiCall('profile/update.php',{method:'POST',body:{password:p1}});
+      showToast('Mot de passe modifié','ph-check-circle');
+      e.target.reset();
+    }catch(err){showToast(err.message,'ph-warning-circle');}
+    finally{btn.disabled=false;}
+  });
+
+  window.deleteAccount=async function(){
+    if(!confirm('Êtes-vous sûr ? Cette action est irréversible.')) return;
+    try{await apiCall('profile/delete.php',{method:'POST'}); clearSession(); window.location.href='index.html';}
+    catch(err){showToast(err.message,'ph-warning-circle');}
+  };
+
+  loadProfile();
+})();
+</script>
