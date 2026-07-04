@@ -1,0 +1,23 @@
+name: Déploiement Continu InfinityFree
+
+on:
+  push:
+    branches:
+      - main  # Se déclenche uniquement quand on push sur main
+
+jobs:
+  web-deploy:
+    name: Déploiement en cours...
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupération du code actuel
+        uses: actions/checkout@v4
+
+      - name: Synchronisation des fichiers vers InfinityFree
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: /htdocs/  # Le dossier public obligatoire chez InfinityFree
