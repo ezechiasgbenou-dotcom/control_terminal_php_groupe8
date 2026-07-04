@@ -1,7 +1,7 @@
 <?php
 /**
  * Connexion à la base de données "social_network"
- * Détection et adaptation automatique selon l'environnement (Local vs InfinityFree)
+ * Détection et adaptation automatique selon l'environnement (Local vs Alwaysdata)
  */
 
 if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1') {
@@ -11,14 +11,12 @@ if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.
     define('DB_USER', getenv('DB_USER') ?: 'root');
     define('DB_PASS', getenv('DB_PASS') ?: '');
 } else {
-    // 🌐 CONFIGURATION PRODUCTION (InfinityFree)
-    // À Remplir une seule fois avec les données de ton panneau InfinityFree :
-    define('DB_HOST', getenv('DB_HOST') ?: 'sql200.infinityfree.com'); // Ton "MySQL Hostname"
-    define('DB_NAME', getenv('DB_NAME') ?: 'if0_42337122_social_network'); // Ton nom de base complet
-    define('DB_USER', getenv('DB_USER') ?: 'if0_42337122');              // Ton "MySQL Username"
-    define('DB_PASS', getenv('DB_PASS') ?: 'Ezeboss123');    // Ton mot de passe unique
+    // 🌐 CONFIGURATION PRODUCTION (Alwaysdata)
+    define('DB_HOST', getenv('DB_HOST') ?: 'mysql-gbenou.alwaysdata.net'); // Regarde l'hôte exact dans l'onglet MySQL
+    define('DB_NAME', getenv('DB_NAME') ?: 'gbenou_social_network');      // Le nom complet avec le préfixe
+    define('DB_USER', getenv('DB_USER') ?: 'gbenou');                     // Ton utilisateur MySQL Always data
+    define('DB_PASS', getenv('DB_PASS') ?: 'Ezeboss123'); 
 }
-
 function getDB(): PDO {
     static $pdo = null;
     if ($pdo === null) {
