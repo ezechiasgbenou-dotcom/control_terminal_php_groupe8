@@ -66,4 +66,4 @@ Le back-office est accessible séparément via `vues/back-office/connexion.html`
 | GBENOU Ezéchias | Architecture,index.html, app.html, routeur SPA, back-office, assets  |
 | HOUNKPATI Joseph|Partials, Clients,config,database |
 | KOUDJONOU Bless Elom| admin,auth,profile,chat |
-| TIKO Joinel Mystère | posts, friends, notifications,lib |
+| TIKO Joinel Mystère | posts, friends, notifications,lib,search |
