@@ -1,0 +1,147 @@
+<!-- Partial : Amis -->
+<style>
+  /* Barre d'onglets avec défilement horizontal intelligent */
+  .tabs { 
+    display: flex; 
+    gap: 8px; 
+    margin-bottom: 24px; 
+    border-bottom: 1px solid var(--color-border); 
+    overflow-x: auto;          /* Active le scroll horizontal si nécessaire */
+    white-space: nowrap;        /* Empêche le retour à la ligne des onglets */
+    scrollbar-width: none;      /* Masque la barre sur Firefox */
+    -webkit-overflow-scrolling: touch; /* Défilement ultra-fluide sur mobile */
+  }
+  
+  .tabs::-webkit-scrollbar {
+    display: none;              /* Masque la barre sur Chrome/Safari/Samsung */
+  }
+
+  .tab { 
+    padding: 12px 18px; 
+    font-weight: 600; 
+    font-size: var(--fs-sm); 
+    color: var(--color-text-secondary); 
+    border-bottom: 3px solid transparent; 
+    margin-bottom: -1px; 
+    cursor: pointer; 
+    flex-shrink: 0;             /* Empêche l'onglet de s'écraser si l'écran est petit */
+  }
+  
+  .tab.active { 
+    color: var(--color-accent-hover); 
+    border-color: var(--color-accent); 
+  }
+
+  /* Grille adaptative pour les cartes d'amis */
+  .grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+    gap: 16px; 
+  }
+  
+  .person-card { padding: 16px; text-align: center; }
+  .person-card img { width: 84px; height: 84px; margin: 0 auto 12px; }
+  .person-card .name { font-weight: 700; margin-bottom: 2px; }
+  .person-card .sub { font-size: var(--fs-xs); color: var(--color-text-muted); margin-bottom: 12px; }
+  .person-card .actions { display: flex; gap: 8px; }
+  .person-card .actions .btn { flex: 1; padding: 8px; font-size: var(--fs-xs); }
+
+  /* Optimisation petits écrans (Mobiles) */
+  @media (max-width: 520px) {
+    .grid {
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); /* Évite d'avoir une seule énorme carte par ligne */
+      gap: 10px;
+    }
+    .person-card { padding: 12px; }
+    .person-card img { width: 68px; height: 68px; }
+    .person-card .actions { flex-direction: column; gap: 6px; }
+  }
+</style>
+
+<div style="max-width:960px; margin:0 auto; padding:24px">
+  <h1 style="font-size:var(--fs-xl); margin-bottom:20px">Amis</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab(this,'requests')">Demandes <span id="countReq"></span></div>
+    <div class="tab" onclick="showTab(this,'suggestions')">Suggestions</div>
+    <div class="tab" onclick="showTab(this,'all')">Mes amis <span id="countAll"></span></div>
+  </div>
+  <div id="requests" class="grid"></div>
+  <div id="suggestions" class="grid" style="display:none"></div>
+  <div id="all" class="grid" style="display:none"></div>
+</div>
+
+<script>
+(function(){
+  requireClientAuth();
+  setLayout('wide');
+  document.getElementById('col-right').innerHTML = '';
+
+  window.showTab = function(el, id) {
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.grid').forEach(function(g){ g.style.display='none'; });
+    el.classList.add('active');
+    document.getElementById(id).style.display='grid';
+  };
+
+  function empty(txt) {
+    return '<div class="card" style="grid-column:1/-1;padding:48px;text-align:center;color:var(--color-text-muted)">'+txt+'</div>';
+  }
+
+  window.sendFriendRequest = async function(userId, btn) {
+    btn.disabled=true; btn.textContent='Envoi…';
+    try {
+      await apiCall('friends/request.php',{method:'POST',body:{user_id:userId}});
+      showToast("Demande envoyée",'ph-check-circle');
+      loadFriends();
+    } catch(err){ showToast(err.message,'ph-warning-circle'); btn.disabled=false; btn.textContent='Ajouter'; }
+  };
+
+  window.respondFriend = async function(userId, action, btn) {
+    btn.closest('.actions').querySelectorAll('button').forEach(function(b){ b.disabled=true; });
+    try {
+      await apiCall('friends/respond.php',{method:'POST',body:{user_id:userId,action:action}});
+      showToast(action==='accept'?'Demande acceptée':'Demande refusée','ph-check-circle');
+      loadFriends();
+    } catch(err){ showToast(err.message,'ph-warning-circle'); }
+  };
+
+  async function loadFriends() {
+    try {
+      var data = await apiCall('friends/list.php');
+      var users = data.users;
+      var requests    = users.filter(function(u){ return u.status==='pending' && u.direction==='received'; });
+      var suggestions = users.filter(function(u){ return u.status==='none'; });
+      var friends     = users.filter(function(u){ return u.status==='accepted'; });
+
+      document.getElementById('countReq').textContent = requests.length ? '('+requests.length+')' : '';
+      document.getElementById('countAll').textContent = '('+friends.length+')';
+
+      var reqBox = document.getElementById('requests');
+      reqBox.innerHTML = requests.length ? '' : empty('Aucune demande en attente.');
+      requests.forEach(function(u){
+        var div=document.createElement('div'); div.className='card person-card';
+        div.innerHTML='<img class="avatar" src="'+avatarUrl(u.avatar)+'" alt="" style="cursor:pointer" onclick="Router.navigate(\'profil-public\',{id:'+u.id+'})"><div class="name">'+u.first_name+' '+u.last_name+'</div><div class="sub">'+(u.city||'')+'</div><div class="actions"><button class="btn btn-primary" onclick="respondFriend('+u.id+',\'accept\',this)">Accepter</button><button class="btn btn-ghost" onclick="respondFriend('+u.id+',\'decline\',this)">Refuser</button></div>';
+        reqBox.appendChild(div);
+      });
+
+      var sugBox = document.getElementById('suggestions');
+      sugBox.innerHTML = suggestions.length ? '' : empty('Aucune suggestion pour le moment.');
+      suggestions.forEach(function(u){
+        var div=document.createElement('div'); div.className='card person-card';
+        div.innerHTML='<img class="avatar" src="'+avatarUrl(u.avatar)+'" alt="" style="cursor:pointer" onclick="Router.navigate(\'profil-public\',{id:'+u.id+'})"><div class="name">'+u.first_name+' '+u.last_name+'</div><div class="sub">'+(u.city||'')+'</div><div class="actions"><button class="btn btn-primary btn-block" onclick="sendFriendRequest('+u.id+',this)"><i class="ph ph-user-plus"></i> Ajouter</button></div>';
+        sugBox.appendChild(div);
+      });
+
+      var allBox = document.getElementById('all');
+      allBox.innerHTML = friends.length ? '' : empty("Pas encore d'amis. Allez dans Suggestions !");
+      friends.forEach(function(u){
+        var div=document.createElement('div'); div.className='card person-card';
+        div.innerHTML='<img class="avatar" src="'+avatarUrl(u.avatar)+'" alt="" style="cursor:pointer" onclick="Router.navigate(\'profil-public\',{id:'+u.id+'})"><div class="name">'+u.first_name+' '+u.last_name+'</div><div class="sub">'+(u.city||'')+'</div><div class="actions"><button class="btn btn-ghost btn-block" onclick="Router.navigate(\'chat\')"><i class="ph ph-chat-circle"></i> Discuter</button></div>';
+        allBox.appendChild(div);
+      });
+    } catch(err){ showToast(err.message,'ph-warning-circle'); }
+  }
+
+  loadFriends();
+})();
+</script>

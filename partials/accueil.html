@@ -1,0 +1,280 @@
+<!-- Partial : Accueil (fil d'actualité) -->
+<div style="display:contents" id="accueil-partial">
+
+<!-- Composer -->
+<div class="card composer" style="margin-bottom:16px">
+  <div class="composer-top">
+    <img class="avatar" id="composerAvatar" src="assets/images/default-avatar.png" width="44" height="44" alt="">
+    <textarea id="composerText" placeholder="Partagez quelque chose avec vos amis…" rows="1"></textarea>
+  </div>
+  <div id="composerPreview" style="display:none;margin-top:10px;position:relative">
+    <img id="composerPreviewImg" style="border-radius:var(--radius-sm);max-height:200px;border:1px solid var(--color-border)">
+    <button type="button" class="btn-icon" onclick="clearComposerImage()" style="position:absolute;top:6px;right:6px;background:rgba(19,41,61,.6);color:#fff"><i class="ph ph-x"></i></button>
+  </div>
+  <div class="composer-divider"></div>
+  <div class="composer-actions">
+    <div class="composer-tools">
+      <label class="btn-icon" style="display:flex;cursor:pointer" title="Ajouter une image">
+        <i class="ph ph-image"></i>
+        <input type="file" id="composerImage" accept="image/*" style="display:none" onchange="previewComposerImage(this)">
+      </label>
+    </div>
+    <button class="btn btn-primary" id="publishBtn" onclick="publishPost()">Publier</button>
+  </div>
+</div>
+
+<!-- Fil -->
+<div id="postsContainer">
+  <div class="card post skeleton" style="height:200px;margin-bottom:16px"></div>
+  <div class="card post skeleton" style="height:180px"></div>
+</div>
+
+</div>
+
+<!-- Colonne droite -->
+<script>
+(function() {
+  requireClientAuth();
+  setLayout('feed');
+  var me = getStoredUser();
+  document.getElementById('composerAvatar').src = avatarUrl(me.avatar);
+
+  // ---- Colonne droite ----
+  var rightCol = document.getElementById('col-right');
+  rightCol.innerHTML =
+    '<div class="card" style="padding:16px;margin-bottom:16px"><h4 style="font-size:var(--fs-md);margin-bottom:12px">Demandes d\'amitié</h4><div id="rightRequests"><p style="font-size:var(--fs-sm);color:var(--color-text-muted)">Chargement…</p></div></div>' +
+    '<div class="card" style="padding:16px"><h4 style="font-size:var(--fs-md);margin-bottom:12px">Contacts</h4><div id="rightContacts"></div></div>';
+
+  // ---- Composer image ----
+  var selectedImageFile = null;
+  window.previewComposerImage = function(input) {
+    if (!input.files[0]) return;
+    selectedImageFile = input.files[0];
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('composerPreviewImg').src = e.target.result;
+      document.getElementById('composerPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(selectedImageFile);
+  };
+  window.clearComposerImage = function() {
+    selectedImageFile = null;
+    document.getElementById('composerImage').value = '';
+    document.getElementById('composerPreview').style.display = 'none';
+  };
+
+  // ---- Publier ----
+  window.publishPost = async function() {
+    var text = document.getElementById('composerText').value.trim();
+    if (!text && !selectedImageFile) { showToast('Écrivez quelque chose ou ajoutez une image.','ph-warning-circle'); return; }
+    var btn = document.getElementById('publishBtn');
+    btn.disabled = true; btn.textContent = 'Publication…';
+    try {
+      var form = new FormData();
+      form.append('content', text);
+      if (selectedImageFile) form.append('image', selectedImageFile);
+      await apiCall('posts/create.php', { method:'POST', body: form });
+      document.getElementById('composerText').value = '';
+      document.getElementById('composerText').style.height = 'auto';
+      clearComposerImage();
+      showToast('Publication partagée !','ph-check-circle');
+      loadFeed();
+    } catch(err) { showToast(err.message,'ph-warning-circle'); }
+    finally { btn.disabled = false; btn.textContent = 'Publier'; }
+  };
+
+  // ---- Rendre un post ----
+  function renderPost(p) {
+    var isMe = Number(p.user_id) === Number(me.id);
+    var profileUrl = isMe ? '#profil' : '#profil-public?id=' + p.user_id;
+    var menuHtml = isMe
+      ? '<div style="position:relative"><button class="btn-icon" onclick="togglePostMenu(this)"><i class="ph ph-dots-three"></i></button>' +
+        '<div class="post-menu card" style="display:none;position:absolute;right:0;top:36px;z-index:10;min-width:160px;padding:6px;box-shadow:var(--shadow-lg)">' +
+        '<button class="sidebar-link" style="width:100%;color:var(--color-danger)" onclick="deletePost(' + p.id + ',this)"><i class="ph ph-trash"></i> Supprimer</button>' +
+        '</div></div>'
+      : '<button class="btn-icon"><i class="ph ph-dots-three-bold"></i></button>';
+
+    var article = document.createElement('article');
+    article.className = 'card post';
+    article.dataset.postId = p.id;
+    article.innerHTML =
+      '<div class="post-header">' +
+        '<a href="' + profileUrl + '"><img class="avatar" src="' + avatarUrl(p.avatar) + '" width="46" height="46" alt=""></a>' +
+        '<div class="post-author">' +
+          '<div class="name"><a href="' + profileUrl + '" style="color:inherit;text-decoration:none">' + p.first_name + ' ' + p.last_name + '</a></div>' +
+          '<div class="meta">' + timeAgo(p.created_at) + '</div>' +
+        '</div>' +
+        menuHtml +
+      '</div>' +
+      '<div class="post-body"></div>' +
+      (p.image ? '<div class="post-image"><img src="' + avatarUrl(p.image) + '" alt=""></div>' : '') +
+      '<div class="post-stats">' +
+        '<div class="reactions"><span class="reaction-bubble"><i class="ph-fill ph-heart" style="font-size:10px"></i></span><span class="like-summary"></span></div>' +
+        '<span class="comment-count-label">' + p.comment_count + ' commentaire' + (p.comment_count > 1 ? 's' : '') + '</span>' +
+      '</div>' +
+      '<div class="post-buttons">' +
+        '<button class="post-action ' + (p.liked_by_me ? 'liked' : '') + '" onclick="toggleLike(this)">' +
+          '<i class="ph ' + (p.liked_by_me ? 'ph-fill' : '') + ' ph-heart"></i><span>J\'aime</span>' +
+          '<span class="like-count" data-count="' + p.like_count + '" style="display:none"></span>' +
+        '</button>' +
+        '<button class="post-action" onclick="openComments(this)"><i class="ph ph-chat-circle"></i><span>Commenter</span></button>' +
+        '<button class="post-action" onclick="toggleSave(this,' + p.id + ')"><i class="ph ph-bookmark-simple"></i><span>Enregistrer</span></button>' +
+      '</div>' +
+      '<div class="comments"><div class="comment-list"></div>' +
+        '<form class="comment-form" onsubmit="submitCommentFeed(this,event)">' +
+          '<input type="text" placeholder="Écrire un commentaire…">' +
+          '<button type="submit"><i class="ph-fill ph-paper-plane-tilt" style="font-size:14px"></i></button>' +
+        '</form>' +
+      '</div>';
+
+    article.querySelector('.post-body').textContent = p.content;
+    article.querySelector('.like-summary').textContent = p.like_count > 0
+      ? (p.liked_by_me ? 'Vous et ' + (p.like_count-1) + ' autre(s)' : p.like_count + ' réaction(s)')
+      : 'Aucune réaction';
+    return article;
+  }
+
+  window.togglePostMenu = function(btn) {
+    var menu = btn.parentElement.querySelector('.post-menu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    setTimeout(function(){
+      var close = function(e){ if(!btn.parentElement.contains(e.target)){ menu.style.display='none'; document.removeEventListener('click',close); }};
+      document.addEventListener('click', close);
+    }, 0);
+  };
+
+  window.deletePost = async function(postId, btn) {
+    if (!confirm('Supprimer cette publication ?')) return;
+    btn.disabled = true;
+    try {
+      await apiCall('posts/delete.php', { method:'POST', body:{ post_id: postId }});
+      var article = btn.closest('.post');
+      article.style.transition = 'opacity 300ms ease';
+      article.style.opacity = '0';
+      setTimeout(function(){ article.remove(); }, 300);
+      showToast('Publication supprimée','ph-check-circle');
+    } catch(err) { showToast(err.message,'ph-warning-circle'); btn.disabled = false; }
+  };
+
+  window.toggleSave = async function(btn, postId) {
+    try {
+      var data = await apiCall('posts/save.php', { method:'POST', body:{ post_id: postId }});
+      var icon = btn.querySelector('i');
+      if (data.saved) { icon.className='ph-fill ph-bookmark-simple'; btn.querySelector('span').textContent='Enregistré'; btn.classList.add('liked'); showToast('Enregistré','ph-bookmark-simple'); }
+      else { icon.className='ph ph-bookmark-simple'; btn.querySelector('span').textContent='Enregistrer'; btn.classList.remove('liked'); }
+    } catch(err) { showToast(err.message,'ph-warning-circle'); }
+  };
+
+  window.submitCommentFeed = async function(form, event) {
+    event.preventDefault();
+    var input = form.querySelector('input');
+    var text = input.value.trim();
+    if (!text) return;
+    var post = form.closest('.post');
+    var postId = post.dataset.postId;
+    var list = form.closest('.comments').querySelector('.comment-list');
+    var item = document.createElement('div');
+    item.className = 'comment';
+    item.innerHTML = '<img class="avatar" src="' + avatarUrl(me.avatar) + '" width="32" height="32" alt=""><div class="comment-bubble"><span class="name"></span><span class="text"></span></div>';
+    item.querySelector('.name').textContent = me.first_name + ' ' + me.last_name;
+    item.querySelector('.text').textContent = text;
+    item.style.opacity = '0';
+    list.appendChild(item);
+    requestAnimationFrame(function(){ item.style.transition='opacity 220ms ease'; item.style.opacity='1'; });
+    var countLabel = post.querySelector('.comment-count-label');
+    var cur = parseInt(countLabel.textContent) || 0;
+    countLabel.textContent = (cur+1) + ' commentaire' + (cur+1>1?'s':'');
+    input.value = '';
+    try { await apiCall('posts/comment.php', { method:'POST', body:{ post_id: Number(postId), content: text }}); }
+    catch(err) { showToast(err.message,'ph-warning-circle'); }
+  };
+
+  var commentsLoaded = new Set();
+  window.openComments = async function(button) {
+    toggleComments(button);
+    var post = button.closest('.post');
+    var postId = post.dataset.postId;
+    if (commentsLoaded.has(postId)) return;
+    try {
+      var data = await apiCall('posts/comments.php?post_id=' + postId);
+      var list = post.querySelector('.comment-list');
+      list.innerHTML = '';
+      data.comments.forEach(function(c){
+        var item = document.createElement('div');
+        item.className = 'comment';
+        item.innerHTML = '<img class="avatar" src="' + avatarUrl(c.avatar) + '" width="32" height="32" alt=""><div class="comment-bubble"><span class="name"></span><span class="text"></span></div>';
+        item.querySelector('.name').textContent = c.first_name + ' ' + c.last_name;
+        item.querySelector('.text').textContent = c.content;
+        list.appendChild(item);
+      });
+      commentsLoaded.add(postId);
+    } catch(err) { showToast(err.message,'ph-warning-circle'); }
+  };
+
+  // ---- Charger le fil ----
+  async function loadFeed() {
+    var container = document.getElementById('postsContainer');
+    if (!container) return;
+    try {
+      var data = await apiCall('posts/list.php');
+      container.innerHTML = '';
+      if (!data.posts.length) {
+        container.innerHTML = '<div class="card" style="padding:48px;text-align:center;color:var(--color-text-muted)"><i class="ph ph-newspaper" style="font-size:32px"></i><p style="margin-top:8px">Aucune publication. Partagez quelque chose !</p></div>';
+        return;
+      }
+      data.posts.forEach(function(p){ container.appendChild(renderPost(p)); });
+    } catch(err) { container.innerHTML = '<p style="color:var(--color-danger);padding:16px">' + err.message + '</p>'; }
+  }
+  window.loadFeed = loadFeed;
+
+  // ---- Sidebar droite ----
+  async function loadSidebar() {
+    try {
+      var data = await apiCall('friends/list.php');
+      var requests = data.users.filter(function(u){ return u.status==='pending' && u.direction==='received'; });
+      var friends  = data.users.filter(function(u){ return u.status==='accepted'; }).slice(0,6);
+
+      var reqBox = document.getElementById('rightRequests');
+      if (!reqBox) return;
+      reqBox.innerHTML = requests.length ? '' : '<p style="font-size:var(--fs-sm);color:var(--color-text-muted)">Aucune demande en attente.</p>';
+      requests.forEach(function(u){
+        var div = document.createElement('div');
+        div.innerHTML =
+          '<div class="people-card">' +
+            '<img class="avatar" src="' + avatarUrl(u.avatar) + '" width="44" height="44" alt="">' +
+            '<div class="info"><div class="name">' + u.first_name + ' ' + u.last_name + '</div><div class="sub">' + (u.city||'') + '</div></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;margin:6px 0 14px 54px">' +
+            '<button class="btn btn-primary" style="flex:1;padding:8px" onclick="respondReq(' + u.id + ',\'accept\',this)">Accepter</button>' +
+            '<button class="btn btn-ghost" style="flex:1;padding:8px" onclick="respondReq(' + u.id + ',\'decline\',this)">Refuser</button>' +
+          '</div>';
+        reqBox.appendChild(div);
+      });
+
+      var contactsBox = document.getElementById('rightContacts');
+      if (!contactsBox) return;
+      contactsBox.innerHTML = friends.length ? '' : '<p style="font-size:var(--fs-sm);color:var(--color-text-muted)">Pas encore d\'amis.</p>';
+      friends.forEach(function(u){
+        var div = document.createElement('div');
+        div.className = 'people-card';
+        div.style.cursor = 'pointer';
+        div.onclick = function(){ Router.navigate('profil-public', {id: u.id}); };
+        div.innerHTML = '<img class="avatar" src="' + avatarUrl(u.avatar) + '" width="36" height="36" alt=""><div class="info"><div class="name">' + u.first_name + ' ' + u.last_name + '</div></div>';
+        contactsBox.appendChild(div);
+      });
+    } catch(err) { /* silencieux */ }
+  }
+
+  window.respondReq = async function(userId, action, btn) {
+    btn.disabled = true;
+    try {
+      await apiCall('friends/respond.php', { method:'POST', body:{ user_id:userId, action:action }});
+      showToast(action==='accept' ? 'Demande acceptée' : 'Demande refusée','ph-check-circle');
+      loadSidebar();
+    } catch(err) { showToast(err.message,'ph-warning-circle'); }
+  };
+
+  loadFeed();
+  loadSidebar();
+})();
+</script>

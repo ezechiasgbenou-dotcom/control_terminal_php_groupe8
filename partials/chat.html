@@ -1,0 +1,185 @@
+<!-- Partial : Chat -->
+<div class="chat-wrap">
+  <!-- Sidebar conversations -->
+  <aside class="chat-list">
+    <div class="chat-list-header">
+      <h3 style="font-size:var(--fs-lg);margin-bottom:12px">Messages</h3>
+      <div class="chat-search">
+        <i class="ph ph-magnifying-glass"></i>
+        <input type="text" id="friendSearch" placeholder="Rechercher un ami…" oninput="searchFriends(this.value)">
+      </div>
+    </div>
+    <div id="convList"><p style="padding:0 16px;font-size:var(--fs-sm);color:var(--color-text-muted)">Chargement…</p></div>
+    <div id="friendResults" style="display:none"></div>
+  </aside>
+
+  <!-- Fenêtre de conversation -->
+  <main class="chat-main">
+    <div id="emptyState" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--color-text-muted)">
+      <i class="ph ph-chats-circle" style="font-size:48px"></i>
+      <p>Sélectionnez une conversation ou recherchez un ami.</p>
+    </div>
+    <div id="activeChat" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div class="chat-head">
+        <button type="button" class="btn-icon mobile-back-btn" onclick="backToConversations()">
+          <i class="ph ph-arrow-left"></i>
+        </button>
+        <span style="position:relative">
+          <img class="avatar" id="chatAvatar" src="assets/images/default-avatar.png" width="40" height="40" alt="">
+          <span class="avatar-status" id="chatStatusDot"></span>
+        </span>
+        <div>
+          <div class="name" id="chatName">—</div>
+          <div class="status" id="chatStatus">—</div>
+        </div>
+      </div>
+      <div class="chat-thread" id="chatThread"></div>
+      <form class="chat-input" id="chatForm">
+        <label class="btn-icon" style="cursor:pointer"><i class="ph ph-image"></i><input type="file" id="chatImageInput" accept="image/*" style="display:none"></label>
+        <input type="text" id="chatInput" placeholder="Écrire un message…" autocomplete="off">
+        <button type="submit" class="send-btn"><i class="ph-fill ph-paper-plane-tilt"></i></button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  requireClientAuth();
+  setLayout('chat');
+  var me = getStoredUser();
+  document.getElementById('col-right').innerHTML = '';
+
+  var activeUserId = null;
+  var lastMessageId = 0;
+  var pollTimer = null;
+
+  // Nettoyage quand on quitte le chat
+  window.__pageCleanup = function() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (typeof setLayout === 'function') setLayout('feed');
+  };
+
+  function fmtTime(d) {
+    return new Date(d.replace(' ','T')).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  async function loadConversations() {
+    try {
+      var data = await apiCall('chat/conversations.php');
+      var list = document.getElementById('convList');
+      if (!data.conversations.length) {
+        list.innerHTML='<p style="padding:0 16px;font-size:var(--fs-sm);color:var(--color-text-muted)">Aucune conversation. Recherchez un ami ci-dessus.</p>';
+        return;
+      }
+      list.innerHTML='';
+      data.conversations.forEach(function(c){
+        var div=document.createElement('div');
+        div.className='conv'+(c.user.id===activeUserId?' active':'');
+        div.onclick=function(){ openConversation(c.user.id,c.user.first_name+' '+c.user.last_name,c.user.avatar,c.user.online); };
+        div.innerHTML=
+          '<span style="position:relative"><img class="avatar" src="'+avatarUrl(c.user.avatar)+'" width="46" height="46" alt=""><span class="avatar-status '+(c.user.online?'online':'')+'"></span></span>'+
+          '<div class="info"><div class="name">'+c.user.first_name+' '+c.user.last_name+'</div><div class="last">'+(c.last_message||'Image')+'</div></div>'+
+          '<span class="time">'+(c.last_time?fmtTime(c.last_time):'')+'</span>';
+        list.appendChild(div);
+      });
+    } catch(err) {}
+  }
+
+  window.searchFriends = async function(query) {
+    var box = document.getElementById('friendResults');
+    if (!query.trim()) { box.style.display='none'; box.innerHTML=''; return; }
+    try {
+      var data = await apiCall('friends/list.php');
+      var q = query.toLowerCase();
+      var matches = data.users.filter(function(u){ return u.status==='accepted' && (u.first_name+' '+u.last_name).toLowerCase().includes(q); });
+      box.innerHTML=''; box.style.display=matches.length?'block':'none';
+      matches.forEach(function(u){
+        var div=document.createElement('div'); div.className='conv';
+        div.onclick=function(){ openConversation(u.id,u.first_name+' '+u.last_name,u.avatar,false); document.getElementById('friendSearch').value=''; box.style.display='none'; };
+        div.innerHTML='<img class="avatar" src="'+avatarUrl(u.avatar)+'" width="46" height="46" alt=""><div class="info"><div class="name">'+u.first_name+' '+u.last_name+'</div><div class="last">Démarrer une conversation</div></div>';
+        box.appendChild(div);
+      });
+    } catch(err) {}
+  };
+
+  async function openConversation(userId, name, avatar, online) {
+    var wrap = document.querySelector('.chat-wrap');
+    if (wrap) wrap.classList.add('show-chat');
+
+  
+    activeUserId = userId; lastMessageId = 0;
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('activeChat').style.display='flex';
+    document.getElementById('chatName').textContent=name;
+    document.getElementById('chatAvatar').src=avatarUrl(avatar);
+    document.getElementById('chatStatus').textContent=online?'En ligne':'Hors ligne';
+    document.getElementById('chatStatusDot').classList.toggle('online',!!online);
+    var thread=document.getElementById('chatThread');
+    thread.innerHTML='<div class="skeleton" style="height:60px;margin-bottom:10px"></div>';
+    try {
+      var data=await apiCall('chat/messages.php?user_id='+userId);
+      thread.innerHTML='';
+      data.messages.forEach(function(m){ renderBubble(m); });
+      if (data.messages.length) lastMessageId=data.messages[data.messages.length-1].id;
+      thread.scrollTop=thread.scrollHeight;
+    } catch(err){ showToast(err.message,'ph-warning-circle'); }
+    loadConversations();
+  }
+
+  window.backToConversations = function() {
+  var wrap = document.querySelector('.chat-wrap');
+  if (wrap) wrap.classList.remove('show-chat');
+  activeUserId = null; // Désactive l'utilisateur courant
+};
+
+  function renderBubble(m) {
+    var thread=document.getElementById('chatThread');
+    var row=document.createElement('div'); row.className='bubble-row'+(m.from_me?' me':'');
+    var src=m.from_me?avatarUrl(me.avatar):document.getElementById('chatAvatar').src;
+    var inner='';
+    if(m.image) inner+='<img src="'+avatarUrl(m.image)+'" style="max-width:200px;border-radius:12px;margin-bottom:'+(m.content?'4px':'0')+'">';
+    if(m.content) { var sp=document.createElement('span'); sp.textContent=m.content; inner+=sp.outerHTML; }
+    row.innerHTML='<img class="avatar" src="'+src+'" width="28" height="28" alt=""><div class="bubble">'+inner+'</div>';
+    row.style.opacity='0';
+    thread.appendChild(row);
+    requestAnimationFrame(function(){ row.style.transition='opacity 200ms ease'; row.style.opacity='1'; });
+    thread.scrollTop=thread.scrollHeight;
+  }
+
+  document.getElementById('chatForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    if (!activeUserId) return;
+    var input=document.getElementById('chatInput');
+    var imgInput=document.getElementById('chatImageInput');
+    var text=input.value.trim();
+    if (!text && !imgInput.files[0]) return;
+    var form=new FormData();
+    form.append('user_id',activeUserId);
+    form.append('content',text);
+    if (imgInput.files[0]) form.append('image',imgInput.files[0]);
+    try {
+      var data=await apiCall('chat/send.php',{method:'POST',body:form});
+      renderBubble(data.message);
+      lastMessageId=data.message.id;
+      input.value=''; imgInput.value='';
+      loadConversations();
+    } catch(err){ showToast(err.message,'ph-warning-circle'); }
+  });
+
+  // Polling toutes les 3 secondes
+  pollTimer = setInterval(async function(){
+    if (!activeUserId) return;
+    try {
+      var data=await apiCall('chat/poll.php?user_id='+activeUserId+'&since='+lastMessageId);
+      if (data.messages.length){
+        data.messages.forEach(function(m){ renderBubble(m); });
+        lastMessageId=data.messages[data.messages.length-1].id;
+        loadConversations();
+      }
+    } catch(err) {}
+  }, 3000);
+
+  loadConversations();
+})();
+</script>
