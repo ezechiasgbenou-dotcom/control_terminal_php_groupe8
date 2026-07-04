@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Équipe — Back-office Lien</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../../assets/css/variables.css">
+<link rel="stylesheet" href="../../assets/css/main.css">
+<link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+<div class="bo-wrap">
+  <aside class="bo-sidebar">
+    <div class="bo-logo">Lien<span class="dot">.</span></div>
+    <span class="bo-role-tag" id="roleTag">—</span>
+    <a href="tableau-de-bord.html" class="bo-link"><i class="ph ph-gauge"></i> Tableau de bord</a>
+    <a href="utilisateurs.html" class="bo-link"><i class="ph ph-users"></i> Utilisateurs</a>
+    <a href="publications.html" class="bo-link"><i class="ph ph-newspaper"></i> Publications</a>
+    <a href="moderateurs.html" class="bo-link active"><i class="ph ph-shield-star"></i> Équipe</a>
+    <div class="bo-spacer"></div>
+    <button class="bo-link" style="border:none; background:none; width:100%; text-align:left" onclick="logout()"><i class="ph ph-sign-out"></i> Déconnexion</button>
+  </aside>
+
+  <main class="bo-main">
+    <div class="bo-header">
+      <div>
+        <h1>Équipe</h1>
+        <p>Gérez les administrateurs et modérateurs de la plateforme</p>
+      </div>
+      <button class="btn btn-primary" onclick="document.getElementById('addForm').scrollIntoView({behavior:'smooth'})"><i class="ph ph-plus"></i> Ajouter un membre</button>
+    </div>
+
+    <div class="card" style="margin-bottom:var(--space-5)">
+      <table class="bo-table">
+        <thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Membre depuis</th><th>Actions</th></tr></thead>
+        <tbody id="staffBody">
+          <tr><td colspan="5" style="text-align:center; color:var(--color-text-muted); padding:32px">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <form class="card" id="addForm" style="padding:var(--space-5); max-width:480px">
+      <h3 style="font-size:var(--fs-lg); margin-bottom:var(--space-4)">Ajouter un administrateur ou modérateur</h3>
+      <div style="display:flex; gap:12px">
+        <div class="field" style="flex:1"><label>Prénom</label><input type="text" id="fFirstName" class="champ" required></div>
+        <div class="field" style="flex:1"><label>Nom</label><input type="text" id="fLastName" class="champ" required></div>
+      </div>
+      <div class="field"><label>Adresse e-mail</label><input type="email" id="fEmail" required></div>
+      <div class="field"><label>Mot de passe</label><input type="password" id="fPassword" required minlength="8"></div>
+      <div class="field">
+        <label>Rôle</label>
+        <select id="fRole" style="padding:11px 14px; border-radius:var(--radius-sm); border:1px solid var(--color-border-strong)">
+          <option value="moderator">Modérateur</option>
+          <option value="admin">Administrateur</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Ajouter au staff</button>
+    </form>
+  </main>
+</div>
+
+<script src="../../assets/js/interactions.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script>
+const staff = requireStaffAuth();
+document.getElementById('roleTag').textContent = staff.role === 'admin' ? 'Administrateur' : 'Modérateur';
+if (staff.role !== 'admin'){
+  showToast('Accès réservé aux administrateurs', 'ph-warning-circle');
+  window.location.href = 'tableau-de-bord.html';
+}
+
+async function loadStaff(){
+  try{
+    const { staff: list } = await apiCall('admin/staff.php');
+    const body = document.getElementById('staffBody');
+    body.innerHTML = '';
+    list.forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.first_name} ${u.last_name}</td>
+        <td>${u.email}</td>
+        <td><span class="pill ${u.role}">${u.role === 'admin' ? 'Administrateur' : 'Modérateur'}</span></td>
+        <td>${new Date(u.created_at.replace(' ','T')).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn btn-ghost bo-btn-sm" style="color:var(--color-danger)" onclick="removeStaff(${u.id}, this)">Retirer</button></td>`;
+      body.appendChild(tr);
+    });
+  }catch(err){ showToast(err.message, 'ph-warning-circle'); }
+}
+
+async function removeStaff(userId, btn){
+  if (!confirm('Retirer ce membre du staff ?')) return;
+  btn.disabled = true;
+  try{
+    await apiCall('admin/staff.php', { method:'POST', body:{ action:'remove', user_id:userId } });
+    showToast('Membre retiré', 'ph-check-circle');
+    loadStaff();
+  }catch(err){ showToast(err.message, 'ph-warning-circle'); btn.disabled = false; }
+}
+
+document.getElementById('addForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Ajout…';
+  try{
+    await apiCall('admin/staff.php', { method:'POST', body:{
+      action:'add',
+      first_name: document.getElementById('fFirstName').value,
+      last_name: document.getElementById('fLastName').value,
+      email: document.getElementById('fEmail').value,
+      password: document.getElementById('fPassword').value,
+      role: document.getElementById('fRole').value,
+    }});
+    showToast('Membre ajouté avec succès', 'ph-check-circle');
+    e.target.reset();
+    loadStaff();
+  }catch(err){
+    showToast(err.message, 'ph-warning-circle');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Ajouter au staff';
+  }
+});
+
+loadStaff();
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de bord — Back-office Lien</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="../../assets/css/variables.css">
+<link rel="stylesheet" href="../../assets/css/main.css">
+<link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+<div class="bo-wrap">
+  <aside class="bo-sidebar">
+    <div class="bo-logo">Lien<span class="dot">.</span></div>
+    <span class="bo-role-tag" id="roleTag">—</span>
+    <a href="tableau-de-bord.html" class="bo-link active"><i class="ph ph-gauge"></i> Tableau de bord</a>
+    <a href="utilisateurs.html" class="bo-link"><i class="ph ph-users"></i> Utilisateurs</a>
+    <a href="publications.html" class="bo-link"><i class="ph ph-newspaper"></i> Publications</a>
+    <a href="moderateurs.html" class="bo-link" id="staffLink" style="display:none"><i class="ph ph-shield-star"></i> Équipe</a>
+    <div class="bo-spacer"></div>
+    <button class="bo-link" style="border:none; background:none; width:100%; text-align:left" onclick="logout()"><i class="ph ph-sign-out"></i> Déconnexion</button>
+  </aside>
+
+  <main class="bo-main">
+    <div class="bo-header">
+      <div>
+        <h1>Tableau de bord</h1>
+        <p>Vue d'ensemble de l'activité de la plateforme</p>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="statGrid">
+      <div class="card stat-card skeleton" style="height:110px"></div>
+      <div class="card stat-card skeleton" style="height:110px"></div>
+      <div class="card stat-card skeleton" style="height:110px"></div>
+      <div class="card stat-card skeleton" style="height:110px"></div>
+    </div>
+
+    <div class="card" style="padding:var(--space-5)">
+      <h3 style="font-size:var(--fs-lg); margin-bottom:var(--space-4)">Inscriptions — 7 derniers jours</h3>
+      <div id="signupsChart" style="display:flex; align-items:flex-end; gap:10px; height:140px"></div>
+    </div>
+  </main>
+</div>
+
+<script src="../../assets/js/interactions.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script>
+const staff = requireStaffAuth();
+document.getElementById('roleTag').textContent = staff.role === 'admin' ? 'Administrateur' : 'Modérateur';
+if (staff.role === 'admin') document.getElementById('staffLink').style.display = 'flex';
+
+async function loadStats(){
+  try{
+    const { stats } = await apiCall('admin/stats.php');
+    const cards = [
+      { icon:'ph-users', color:'#E4ECF3', fg:'#2E6F95', value: stats.total_users, label: 'Utilisateurs inscrits' },
+      { icon:'ph-newspaper', color:'#FCE6D4', fg:'#E8772E', value: stats.total_posts, label: 'Publications' },
+      { icon:'ph-chat-circle', color:'#DEF4EB', fg:'#2FA876', value: stats.total_comments, label: 'Commentaires' },
+      { icon:'ph-heart', color:'#FBE4E4', fg:'#C94B4B', value: stats.total_likes, label: "J'aime" },
+    ];
+    const grid = document.getElementById('statGrid');
+    grid.innerHTML = '';
+    cards.forEach(c=>{
+      const div = document.createElement('div');
+      div.className = 'card stat-card';
+      div.innerHTML = `<div class="icon" style="background:${c.color}; color:${c.fg}"><i class="ph ${c.icon}"></i></div>
+        <div class="value">${c.value}</div><div class="label">${c.label}</div>`;
+      grid.appendChild(div);
+    });
+
+    const chart = document.getElementById('signupsChart');
+    chart.innerHTML = '';
+    const max = Math.max(1, ...stats.signups_chart.map(d=>d.count));
+    const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    for (let i=6;i>=0;i--){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const key = d.toISOString().slice(0,10);
+      const found = stats.signups_chart.find(s=>s.day===key);
+      const count = found ? found.count : 0;
+      const bar = document.createElement('div');
+      bar.style.cssText = `flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; justify-content:flex-end;`;
+      bar.innerHTML = `<span style="font-size:var(--fs-xs); color:var(--color-text-muted)">${count}</span>
+        <div style="width:100%; background:var(--color-link); border-radius:6px 6px 0 0; height:${Math.max(4,(count/max)*90)}px; transition:height 400ms ease"></div>
+        <span style="font-size:var(--fs-xs); color:var(--color-text-muted)">${days[d.getDay()]}</span>`;
+      chart.appendChild(bar);
+    }
+  }catch(err){ showToast(err.message, 'ph-warning-circle'); }
+}
+loadStats();
+</script>
+</body>
+</html>

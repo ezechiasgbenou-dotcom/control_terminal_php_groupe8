@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publications — Back-office Lien</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../../assets/css/variables.css">
+<link rel="stylesheet" href="../../assets/css/main.css">
+<link rel="stylesheet" href="../../assets/css/admin.css">
+<style>
+  .mini-post{ display:flex; gap:12px; align-items:flex-start; }
+  .mini-post img.thumb{ width:54px; height:54px; border-radius:8px; object-fit:cover; }
+  .mini-post .content{ max-width:340px; font-size:var(--fs-sm); color:var(--color-text); }
+</style>
+</head>
+<body>
+<div class="bo-wrap">
+  <aside class="bo-sidebar">
+    <div class="bo-logo">Lien<span class="dot">.</span></div>
+    <span class="bo-role-tag" id="roleTag">—</span>
+    <a href="tableau-de-bord.html" class="bo-link"><i class="ph ph-gauge"></i> Tableau de bord</a>
+    <a href="utilisateurs.html" class="bo-link"><i class="ph ph-users"></i> Utilisateurs</a>
+    <a href="publications.html" class="bo-link active"><i class="ph ph-newspaper"></i> Publications</a>
+    <a href="moderateurs.html" class="bo-link" id="staffLink" style="display:none"><i class="ph ph-shield-star"></i> Équipe</a>
+    <div class="bo-spacer"></div>
+    <button class="bo-link" style="border:none; background:none; width:100%; text-align:left" onclick="logout()"><i class="ph ph-sign-out"></i> Déconnexion</button>
+  </aside>
+
+  <main class="bo-main">
+    <div class="bo-header">
+      <div>
+        <h1>Publications</h1>
+        <p>Modérez les contenus partagés par les utilisateurs</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <table class="bo-table">
+        <thead><tr><th>Publication</th><th>Auteur</th><th>Réactions</th><th>Publié le</th><th>Actions</th></tr></thead>
+        <tbody id="postsBody">
+          <tr><td colspan="5" style="text-align:center; color:var(--color-text-muted); padding:32px">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="../../assets/js/interactions.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script>
+const staff = requireStaffAuth();
+document.getElementById('roleTag').textContent = staff.role === 'admin' ? 'Administrateur' : 'Modérateur';
+if (staff.role === 'admin') document.getElementById('staffLink').style.display = 'flex';
+
+async function loadPosts(){
+  try{
+    const { posts } = await apiCall('admin/posts.php');
+    const body = document.getElementById('postsBody');
+    if (posts.length === 0){ body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--color-text-muted)">Aucune publication.</td></tr>`; return; }
+    body.innerHTML = '';
+    posts.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><div class="mini-post">
+          ${p.image ? `<img class="thumb" src="${avatarUrl(p.image)}" alt="">` : ''}
+          <span class="content"></span>
+        </div></td>
+        <td><div class="user-cell"><img class="avatar" src="${avatarUrl(p.avatar)}" width="30" height="30" alt=""><span>${p.first_name} ${p.last_name}</span></div></td>
+        <td>${p.like_count} j'aime · ${p.comment_count} commentaires</td>
+        <td>${new Date(p.created_at.replace(' ','T')).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn btn-ghost bo-btn-sm" style="color:var(--color-danger)" onclick="removePost(${p.id}, this)">Supprimer</button></td>`;
+      tr.querySelector('.content').textContent = p.content;
+      body.appendChild(tr);
+    });
+  }catch(err){ showToast(err.message, 'ph-warning-circle'); }
+}
+
+async function removePost(postId, btn){
+  if (!confirm('Supprimer définitivement cette publication ?')) return;
+  btn.disabled = true;
+  try{
+    await apiCall('admin/posts.php', { method:'POST', body:{ post_id:postId } });
+    showToast('Publication supprimée', 'ph-check-circle');
+    loadPosts();
+  }catch(err){ showToast(err.message, 'ph-warning-circle'); btn.disabled = false; }
+}
+
+loadPosts();
+</script>
+</body>
+</html>

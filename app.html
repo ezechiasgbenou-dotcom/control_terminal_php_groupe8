@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lien</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+  /* Styles nécessaires pour les partials chargés dans #view */
+  .cover{ height:260px; border-radius:0 0 var(--radius-lg) var(--radius-lg); overflow:hidden; position:relative; background:linear-gradient(135deg,var(--color-primary),var(--color-link)); }
+  .cover img{ width:100%; height:100%; object-fit:cover; }
+  .cover-edit{ position:absolute; bottom:16px; right:16px; background:rgba(19,41,61,0.55); backdrop-filter:blur(4px); color:#fff; }
+  .profile-header{ max-width:900px; margin:0 auto; padding:0 24px; display:flex; align-items:flex-end; gap:24px; margin-top:-60px; position:relative; }
+  .profile-avatar-wrap{ width:140px; height:140px; border:5px solid var(--color-surface); border-radius:50%; overflow:hidden; position:relative; flex-shrink:0; }
+  .profile-avatar-wrap img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .profile-avatar-edit{ position:absolute; bottom:6px; right:6px; width:30px; height:30px; border-radius:50%; background:var(--color-surface); border:1px solid var(--color-border); display:flex; align-items:center; justify-content:center; color:var(--color-text-secondary); cursor:pointer; z-index:2; }
+  .profile-meta{ padding-bottom:20px; flex:1; }
+  .profile-meta h1{ font-size:var(--fs-2xl); }
+  .profile-meta .sub{ color:var(--color-text-secondary); font-size:var(--fs-sm); margin-top:2px; }
+  .profile-tabs{ max-width:900px; margin:20px auto 0; padding:0 24px; display:flex; gap:8px; border-bottom:1px solid var(--color-border); }
+  .profile-tab{ padding:14px 18px; font-weight:600; font-size:var(--fs-sm); color:var(--color-text-secondary); border-bottom:3px solid transparent; margin-bottom:-1px; cursor:pointer; transition:color var(--transition),border-color var(--transition); }
+  .profile-tab.active{ color:var(--color-accent-hover); border-color:var(--color-accent); }
+  .profile-tab:hover:not(.active){ color:var(--color-text); }
+  .profile-body{ max-width:900px; margin:0 auto; padding:24px; display:grid; grid-template-columns:280px 1fr; gap:24px; }
+  .info-row{ display:flex; gap:12px; align-items:center; padding:8px 0; font-size:var(--fs-sm); color:var(--color-text-secondary); }
+  .info-row i{ font-size:18px; color:var(--color-text-muted); }
+  .tab-content{ display:none; }
+  .tab-content.active{ display:block; }
+  .form-modal{ padding:16px; margin-top:16px; }
+  .chat-wrap{ display:grid; grid-template-columns:300px 1fr; height:calc(100vh - 64px); }
+  .chat-list{ border-right:1px solid var(--color-border); background:var(--color-surface); overflow-y:auto; }
+  .chat-list-header{ padding:16px; }
+  .chat-search{ display:flex; align-items:center; gap:8px; background:var(--color-surface-alt); border-radius:var(--radius-full); padding:8px 14px; }
+  .chat-search input{ border:none; background:transparent; outline:none; flex:1; font-size:var(--fs-sm); }
+  .conv{ display:flex; gap:12px; align-items:center; padding:12px 16px; border-left:3px solid transparent; cursor:pointer; transition:background var(--transition); }
+  .conv:hover{ background:var(--color-surface-alt); }
+  .conv.active{ background:var(--color-accent-soft); border-color:var(--color-accent); }
+  .conv .info{ flex:1; min-width:0; }
+  .conv .name{ font-weight:600; font-size:var(--fs-sm); }
+  .conv .last{ font-size:var(--fs-xs); color:var(--color-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px; }
+  .conv .time{ font-size:11px; color:var(--color-text-muted); }
+  .chat-main{ display:flex; flex-direction:column; background:var(--color-bg); height:calc(100vh - 64px); }
+  .chat-head{ display:flex; align-items:center; gap:12px; padding:14px 24px; background:var(--color-surface); border-bottom:1px solid var(--color-border); }
+  .chat-head .name{ font-weight:700; font-size:var(--fs-base); }
+  .chat-head .status{ font-size:var(--fs-xs); color:var(--color-success); }
+  .chat-thread{ flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:10px; }
+  .bubble-row{ display:flex; gap:8px; max-width:62%; }
+  .bubble-row.me{ align-self:flex-end; flex-direction:row-reverse; }
+  .bubble{ padding:10px 16px; border-radius:18px; font-size:var(--fs-sm); line-height:1.45; background:var(--color-surface); border:1px solid var(--color-border); border-bottom-left-radius:4px; }
+  .bubble-row.me .bubble{ background:var(--color-primary); color:#fff; border:none; border-bottom-right-radius:4px; border-bottom-left-radius:18px; }
+  .typing-dots{ display:flex; gap:3px; padding:4px 0; }
+  .typing-dots span{ width:6px; height:6px; border-radius:50%; background:var(--color-text-muted); animation:bounce 1.2s infinite; }
+  .typing-dots span:nth-child(2){ animation-delay:.15s; }
+  .typing-dots span:nth-child(3){ animation-delay:.3s; }
+  @keyframes bounce{ 0%,60%,100%{ transform:translateY(0); opacity:.5; } 30%{ transform:translateY(-4px); opacity:1; } }
+  .chat-input{ display:flex; align-items:center; gap:10px; padding:16px 24px; background:var(--color-surface); border-top:1px solid var(--color-border); }
+  .chat-input input{ flex:1; border:1px solid var(--color-border-strong); border-radius:var(--radius-full); padding:11px 18px; font-size:var(--fs-sm); outline:none; transition:border-color var(--transition); }
+  .chat-input input:focus{ border-color:var(--color-link); }
+  .send-btn{ width:42px; height:42px; border-radius:50%; background:var(--color-accent); color:#fff; border:none; display:flex; align-items:center; justify-content:center; transition:transform var(--transition),background var(--transition); cursor:pointer; }
+  .send-btn:hover{ background:var(--color-accent-hover); }
+  .send-btn:active{ transform:scale(.9) rotate(-10deg); }
+  .settings-wrap{ max-width:860px; margin:0 auto; padding:24px; display:grid; grid-template-columns:220px 1fr; gap:24px; }
+  .settings-nav{ display:flex; flex-direction:column; gap:2px; }
+  .settings-section{ display:none; }
+  .settings-section.active{ display:block; }
+  .danger-zone{ border:1px solid var(--color-danger); border-radius:var(--radius-md); padding:16px; margin-top:24px; }
+  .danger-zone h4{ color:var(--color-danger); margin-bottom:8px; }
+  
+  @media(max-width:700px){ .profile-body{ grid-template-columns:1fr; } .chat-wrap{ grid-template-columns:1fr; } .settings-wrap{ grid-template-columns:1fr; } }
+  /* 📱 Optimisation de la barre de recherche pour les tablettes et écrans intermédiaires (720px) */
+
+</style>
+</head>
+<body>
+
+<!-- ===== Barre de navigation (chargée une fois) ===== -->
+<nav class="navbar">
+  <a href="#accueil" data-page="accueil" class="navbar-logo">Lien<span class="dot">.</span></a>
+
+  <div class="navbar-search">
+    <i class="ph ph-magnifying-glass"></i>
+    <input type="text" id="globalSearch" style="width: 100%;" placeholder="Rechercher sur lien..." oninput="globalSearch(this.value)">
+  </div>
+
+  <div class="navbar-actions">
+    <a href="#accueil" data-page="accueil" class="btn-icon active" title="Accueil"><i class="ph-fill ph-house"></i></a>
+    <a href="#amis"    data-page="amis"    class="btn-icon" title="Amis"><i class="ph ph-users-three"></i></a>
+    <a href="#chat"    data-page="chat"    class="btn-icon" title="Messages" style="position:relative;" onclick="clearMessageBadges()">
+      <i class="ph ph-chat-circle-dots"></i>
+      <span class="badge" id="messageBadge" style="display:none"></span>
+    </a>
+    <!-- Cloche supérieure (Uniquement le bouton !) -->
+    <div style="position:relative" class="desktop-notif-btn">
+      <button class="btn-icon" id="notifBtn" title="Notifications" onclick="toggleNotifPanel()">
+        <i class="ph ph-bell"></i>
+        <span class="badge" id="notifBadge" style="display:none"></span>
+      </button>
+    </div>
+    <button class="btn-icon mobile-search-btn" onclick="toggleMobileSearch()" title="Rechercher">
+      <i class="ph ph-magnifying-glass"></i>
+    </button>
+
+    <button class="btn-icon" onclick="logout()" title="Déconnexion" style="color: #64748b;">
+      <i class="ph ph-sign-out"></i>
+    </button>
+
+    <div class="profile-dropdown">
+      <button class="avatar-trigger" id="profileBtn" onclick="toggleProfilePanel()" title="Menu profil">
+        <img class="avatar" id="navAvatar" src="assets/images/default-avatar.png" width="36" height="36" alt="Mon profil">
+      </button>
+      
+      <div id="profilePanel" class="dropdown-menu-card">
+        <div class="dropdown-menu-header">
+          <span>Mon compte</span>
+        </div>
+        <div class="dropdown-menu-list">
+          <a href="#profil" onclick="toggleProfilePanel()" class="dropdown-menu-item">
+            <i class="ph ph-user-circle"></i> 
+            <span>Mon profil</span>
+          </a>
+          <a href="#enregistres" onclick="toggleProfilePanel()" class="dropdown-menu-item">
+            <i class="ph ph-bookmark-simple"></i> 
+            <span>Enregistrés</span>
+          </a>
+          <a href="#parametres" onclick="toggleProfilePanel()" class="dropdown-menu-item">
+            <i class="ph ph-gear"></i> 
+            <span>Paramètres</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notifPanel" class="card dynamic-notif-panel" style="display:none;">
+    <div class="notif-panel-header">
+      <span>Notifications</span>
+      <button class="btn-link-clean" onclick="markAllRead()">Tout lire</button>
+    </div>
+    <div id="notifList">
+      <!-- Le JS viendra injecter les éléments ici. Exemple de structure attendue :
+      <div class="notif-item unread">
+        <img src="avatar.png" class="notif-avatar" alt="">
+        <div class="notif-content">
+          <p class="notif-text"><strong>Ezechias Gbenou</strong> a aimé votre publication</p>
+          <span class="notif-time">Il y a 4 h</span>
+        </div>
+      </div> 
+      -->
+      <p style="padding:16px;color:var(--color-text-muted);font-size:var(--fs-sm)">Chargement…</p>
+    </div>
+  </div>
+
+
+  <div id="mobileSearchPanel" class="mobile-search-bar">
+    <i class="ph ph-magnifying-glass"></i>
+    <input type="text" id="mobileSearchInput" placeholder="Rechercher sur Lien…" oninput="globalSearch(this.value)">
+  </div>
+</nav>
+
+<div class="mobile-nav">
+  <a href="#accueil" data-page="accueil" class="mobile-nav-item active" title="Accueil"><i class="ph-fill ph-house"></i></a>
+  <a href="#amis"    data-page="amis"    class="mobile-nav-item" title="Amis"><i class="ph ph-users-three"></i></a>
+  <a href="#chat"    data-page="chat"    class="mobile-nav-item" title="Messages" style="position:relative;" onclick="clearMessageBadges()">
+    <i class="ph ph-chat-circle-dots"></i>
+    <span class="badge" id="mobileMessageBadge" style="display:none"></span>
+  </a>
+  <button class="mobile-nav-item" onclick="toggleNotifPanel()" title="Notifications" style="background:none;border:none;">
+    <i class="ph ph-bell"></i>
+    <span class="badge" id="mobileNotifBadge" style="display:none">0</span>
+  </button>
+</div>
+
+<!-- ===== Layout principal ===== -->
+<div class="layout" id="mainLayout">
+
+  <!-- Sidebar gauche (chargée une fois) -->
+  <aside class="col-left" id="sidebarLeft">
+    <ul style="display:flex;flex-direction:column;gap:2px">
+      <li><a href="#profil"      data-page="profil"      class="sidebar-link"><i class="ph ph-user-circle"></i><span>Mon profil</span></a></li>
+      <li><a href="#accueil"     data-page="accueil"     class="sidebar-link active"><i class="ph-fill ph-house"></i><span>Accueil</span></a></li>
+      <li><a href="#amis"        data-page="amis"        class="sidebar-link"><i class="ph ph-users-three"></i><span>Amis</span></a></li>
+      <li><a href="#chat"        data-page="chat"        class="sidebar-link"><i class="ph ph-chat-circle-dots" onclick="clearMessageBadges()"></i><span>Messages</span></a></li>
+      <li><a href="#enregistres" data-page="enregistres" class="sidebar-link"><i class="ph ph-bookmark-simple"></i><span>Enregistrés</span></a></li>
+      <li><a href="#parametres"  data-page="parametres"  class="sidebar-link"><i class="ph ph-gear"></i><span>Paramètres</span></a></li>
+    </ul>
+  </aside>
+
+  <!-- Zone de contenu dynamique -->
+  <div id="view" style="min-height:400px"></div>
+
+  <!-- Colonne droite (remplie par chaque partial si besoin) -->
+  <aside class="col-right" id="col-right"></aside>
+
+</div>
+
+
+
+<script src="assets/js/interactions.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/router.js"></script>
+<script>
+// ---- Système de layout dynamique ----
+// Appelé par chaque partial pour ajuster la mise en page
+window.setLayout = function(type) {
+  var layout   = document.getElementById('mainLayout');
+  var sidebar  = document.getElementById('sidebarLeft');
+  var colRight = document.getElementById('col-right');
+  var view     = document.getElementById('view');
+
+  // Réinitialisation
+  sidebar.style.display  = '';
+  colRight.style.display = '';
+  view.style.padding     = '';
+  layout.style.padding   = '';
+  layout.style.maxWidth  = '';
+  layout.style.gap       = '';
+
+  if (type === 'chat') {
+    // Chat pleine largeur — la sidebar du chat gère sa propre nav interne
+    sidebar.style.display  = 'none';
+    colRight.style.display = 'none';
+    layout.style.gridTemplateColumns = '1fr';
+    layout.style.padding   = '0';
+    layout.style.maxWidth  = 'none';
+    layout.style.gap       = '0';
+    view.style.padding     = '0';
+    view.style.overflow    = 'hidden';
+  } else if (type === 'wide') {
+    // Profil / Amis / Paramètres : sidebar gauche + contenu large, pas de colonne droite
+    colRight.style.display = 'none';
+    layout.style.gridTemplateColumns = '260px 1fr';
+    view.style.padding = '0';
+  } else if (type === 'centered') {
+    // Page centrée sans colonne droite (Enregistrés)
+    colRight.style.display = 'none';
+    layout.style.gridTemplateColumns = '260px minmax(0,680px)';
+  } else {
+    // 'feed' — 3 colonnes par défaut
+    layout.style.gridTemplateColumns = '';
+    view.style.overflow = '';
+  }
+};
+
+// ---- Protection de la page ----
+requireClientAuth();
+
+// ---- Avatar dans la navbar ----
+(function(){
+  var me = getStoredUser();
+  if (me) document.getElementById('navAvatar').src = avatarUrl(me.avatar);
+})();
+
+
+/*Barre de recherche mobile*/
+function toggleMobileSearch() {
+  var panel = document.getElementById('mobileSearchPanel');
+  var input = document.getElementById('mobileSearchInput');
+  
+  if (panel.style.display === 'none' || panel.style.display === '') {
+    panel.style.display = 'flex';
+    input.focus(); // Met directement le curseur dans la recherche
+  } else {
+    panel.style.display = 'none';
+    input.value = ''; // Optionnel : vide la recherche quand on ferme
+  }
+}
+
+// ---- Notifications ----
+// ---- Notifications & Profil (Logique de basculement sécurisée) ----
+var _notifOpen = false;
+var _profileOpen = false;
+
+function toggleNotifPanel() {
+  var panel = document.getElementById('notifPanel');
+  var profilePanel = document.getElementById('profilePanel');
+  
+  // 🟢 Sécurité : Ferme le profil s'il est ouvert pour éviter les conflits visuels
+  if (profilePanel && profilePanel.style.display === 'block') {
+    profilePanel.style.display = 'none';
+    _profileOpen = false;
+    document.removeEventListener('click', handleOutsideClickProfile);
+  }
+
+  _notifOpen = !_notifOpen;
+  panel.style.display = _notifOpen ? 'block' : 'none';
+  
+  if (_notifOpen) {
+    loadNotifications();
+    // Utilisation d'une fonction nommée pour un nettoyage propre sans doublons
+    setTimeout(function(){
+      document.addEventListener('click', handleOutsideClickNotif);
+    }, 0);
+  } else {
+    document.removeEventListener('click', handleOutsideClickNotif);
+  }
+}
+
+function handleOutsideClickNotif(e) {
+  var panel = document.getElementById('notifPanel');
+  var btn = document.getElementById('notifBtn');
+  var mobileBtn = document.getElementById('mobileNotifBtn');
+  
+  var clickedOnTrigger = (btn && btn.contains(e.target)) || (mobileBtn && mobileBtn.contains(e.target));
+  
+  if (!clickedOnTrigger && panel && !panel.contains(e.target)){
+    panel.style.display = 'none';
+    _notifOpen = false;
+    document.removeEventListener('click', handleOutsideClickNotif);
+  } else if (clickedOnTrigger && !_notifOpen) {
+    // Nettoie l'écouteur si fermé via le bouton déclencheur
+    document.removeEventListener('click', handleOutsideClickNotif);
+  }
+}
+
+function toggleProfilePanel() {
+  var panel = document.getElementById('profilePanel');
+  var notifPanel = document.getElementById('notifPanel');
+  
+  // 🟢 Sécurité : Ferme les notifications si elles sont ouvertes
+  if (notifPanel && notifPanel.style.display === 'block') {
+    notifPanel.style.display = 'none';
+    _notifOpen = false;
+    document.removeEventListener('click', handleOutsideClickNotif);
+  }
+
+  _profileOpen = !_profileOpen;
+  panel.style.display = _profileOpen ? 'block' : 'none';
+  
+  if (_profileOpen) {
+    setTimeout(function(){
+      document.addEventListener('click', handleOutsideClickProfile);
+    }, 0);
+  } else {
+    document.removeEventListener('click', handleOutsideClickProfile);
+  }
+}
+
+function handleOutsideClickProfile(e) {
+  var panel = document.getElementById('profilePanel');
+  var btn = document.getElementById('profileBtn');
+  
+  var clickedOnTrigger = btn && btn.contains(e.target);
+  
+  if (!clickedOnTrigger && panel && !panel.contains(e.target)){
+    panel.style.display = 'none';
+    _profileOpen = false;
+    document.removeEventListener('click', handleOutsideClickProfile);
+  } else if (clickedOnTrigger && !_profileOpen) {
+    document.removeEventListener('click', handleOutsideClickProfile);
+  }
+}
+
+// Fonction unique pour synchroniser l'affichage des deux badges (ordinateur et mobile)
+function _renderBadges(unreadCount) {
+  var badge = document.getElementById('notifBadge');
+  var mobileBadge = document.getElementById('mobileNotifBadge');
+  
+  var displayStyle = unreadCount > 0 ? 'flex' : 'none';
+  var textValue = unreadCount > 9 ? '9+' : unreadCount;
+
+  if (badge) {
+    badge.style.display = displayStyle;
+    badge.textContent = textValue;
+  }
+  if (mobileBadge) {
+    mobileBadge.style.display = displayStyle;
+    mobileBadge.textContent = textValue;
+  }
+}
+
+async function loadNotifications() {
+  try {
+    var data = await apiCall('notifications/list.php');
+    
+    // Met à jour les compteurs globaux (badges d'icônes)
+    _renderBadges(data.unread);
+
+    var list = document.getElementById('notifList');
+    if (!data.notifications.length) {
+      list.innerHTML = '<p style="padding:16px;color:var(--color-text-muted);font-size:var(--fs-sm)">Aucune notification.</p>';
+      return;
+    }
+    list.innerHTML = '';
+    
+    data.notifications.forEach(function(n) {
+      var div = document.createElement('div');
+      
+      // Utilisation des classes exactes
+      div.className = 'notif-item' + (n.is_read ? '' : ' unread');
+      
+      // On n'affiche le point rouge QUE si la notification est strictement non lue (n.is_read vaut false ou 0)
+      var redDot = (!n.is_read) ? '<span class="notif-dot" style="width:8px;height:8px;border-radius:50%;background:var(--color-accent);flex-shrink:0;margin-top:6px;"></span>' : '';
+      
+      div.innerHTML =
+        '<img class="notif-avatar" src="' + avatarUrl(n.avatar) + '" alt="">' +
+        '<div class="notif-content">' +
+          '<p class="notif-text"><strong>' + n.first_name + ' ' + n.last_name + '</strong> ' + n.label + '</p>' +
+          '<span class="notif-time">' + timeAgo(n.created_at) + '</span>' +
+        '</div>' + redDot; // On injecte la variable ici
+      
+      div.onclick = async function() {
+        if (!n.is_read) {
+          await apiCall('notifications/list.php', { method:'POST', body:{ action:'mark_read', id: n.id }});
+          div.classList.remove('unread');
+          // On supprime le point rouge de cette notification spécifique au clic
+          var dot = div.querySelector('.notif-dot');
+          if (dot) dot.remove();
+          updateNotifBadge();
+        }
+        
+        if (n.type === 'friend_request' || n.type === 'friend_accept') {
+          Router.navigate('amis');
+        } else if (n.type === 'message') {
+          clearMessageBadges(); // 🟢 Efface instantanément les badges PC et Mobile au clic
+          Router.navigate('chat');
+        } else {
+          Router.navigate('accueil');
+        }
+        toggleNotifPanel();
+      };
+      list.appendChild(div);
+    });
+  } catch(err) { /* silencieux */ }
+}async function loadNotifications() {
+  try {
+    var data = await apiCall('notifications/list.php');
+    
+    // Met à jour les compteurs globaux (badges d'icônes)
+    _renderBadges(data.unread);
+
+    var list = document.getElementById('notifList');
+    if (!data.notifications.length) {
+      list.innerHTML = '<p style="padding:16px;color:var(--color-text-muted);font-size:var(--fs-sm)">Aucune notification.</p>';
+      return;
+    }
+    list.innerHTML = '';
+    
+    data.notifications.forEach(function(n) {
+      var div = document.createElement('div');
+      
+      // Utilisation des classes exactes
+      div.className = 'notif-item' + (n.is_read ? '' : ' unread');
+      
+      // On n'affiche le point rouge QUE si la notification est strictement non lue (n.is_read vaut false ou 0)
+      var redDot = (!n.is_read) ? '<span class="notif-dot" style="width:8px;height:8px;border-radius:50%;background:var(--color-accent);flex-shrink:0;margin-top:6px;"></span>' : '';
+      
+      div.innerHTML =
+        '<img class="notif-avatar" src="' + avatarUrl(n.avatar) + '" alt="">' +
+        '<div class="notif-content">' +
+          '<p class="notif-text"><strong>' + n.first_name + ' ' + n.last_name + '</strong> ' + n.label + '</p>' +
+          '<span class="notif-time">' + timeAgo(n.created_at) + '</span>' +
+        '</div>' + redDot; // On injecte la variable ici
+      
+      div.onclick = async function() {
+        if (!n.is_read) {
+          await apiCall('notifications/list.php', { method:'POST', body:{ action:'mark_read', id: n.id }});
+          div.classList.remove('unread');
+          // On supprime le point rouge de cette notification spécifique au clic
+          var dot = div.querySelector('.notif-dot');
+          if (dot) dot.remove();
+          updateNotifBadge();
+        }
+        
+        if (n.type === 'friend_request' || n.type === 'friend_accept') {
+          Router.navigate('amis');
+        } else if (n.type === 'message') {
+          clearMessageBadges(); // 🟢 Efface instantanément les badges PC et Mobile au clic
+          Router.navigate('chat');
+        } else {
+          Router.navigate('accueil');
+        }
+        toggleNotifPanel();
+      };
+      list.appendChild(div);
+    });
+  } catch(err) { /* silencieux */ }
+}
+
+async function markAllRead() {
+  try {
+    //  On force immédiatement les compteurs à 0 graphiquement pour une sensation d'instantanéité
+    _renderBadges(0);
+
+    // 2. On dit au serveur de tout passer en "lu"
+    await apiCall('notifications/list.php', { method:'POST', body:{ action:'mark_read' }});
+    
+    // On nettoie manuellement le panneau sans attendre le rechargement pour éviter le bug visuel
+    var dots = document.querySelectorAll('.notif-dot');
+    dots.forEach(function(dot) {
+      dot.remove(); // Supprime tous les points rouges à l'écran
+    });
+    
+    var unreadItems = document.querySelectorAll('.notif-item.unread');
+    unreadItems.forEach(function(item) {
+      item.classList.remove('unread'); // Enlève la couleur de fond des éléments non lus
+    });
+
+    // 4. On rafraîchit proprement les données réelles
+    await loadNotifications();
+    _renderBadges(0);
+  } catch(e) {}
+}
+async function updateNotifBadge() {
+  try {
+    var data = await apiCall('notifications/list.php');
+    _renderBadges(data.unread);
+  } catch(e) {}
+}
+
+
+// Fonction unique pour synchroniser l'affichage des deux badges de messages (ordinateur et mobile)
+function _renderMessageBadges(unreadCount) {
+  var badge = document.getElementById('messageBadge');
+  var mobileBadge = document.getElementById('mobileMessageBadge');
+  
+  var displayStyle = unreadCount > 0 ? 'flex' : 'none';
+  var textValue = unreadCount > 99 ? '99+' : unreadCount;
+
+  if (badge) {
+    badge.style.display = displayStyle;
+    badge.textContent = textValue;
+  }
+  if (mobileBadge) {
+    mobileBadge.style.display = displayStyle;
+    mobileBadge.textContent = textValue;
+  }
+}
+
+async function updateMessageBadge() {
+  try {
+    // Appel à ton point d'accès PHP (adapte le chemin si nécessaire, ex: messages/unread_count.php)
+    var data = await apiCall('chat/unread_count.php');
+    _renderMessageBadges(data.unread_count || data.unread || 0);
+  } catch(e) {}
+}
+
+// Permet de masquer instantanément les badges dès que l'utilisateur navigue vers le chat
+function clearMessageBadges() {
+  var badge = document.getElementById('messageBadge');
+  var mobileBadge = document.getElementById('mobileMessageBadge');
+  if (badge) badge.style.display = 'none';
+  if (mobileBadge) mobileBadge.style.display = 'none';
+}
+
+// ---- 1. Écouteur global pour fermer la recherche mobile (Placé HORS de la fonction) ----
+document.addEventListener('click', function(event) {
+  var panel = document.getElementById('mobileSearchPanel');
+  var btn = document.querySelector('.mobile-search-btn');
+
+  // Si le panneau est affiché
+  if (panel && panel.style.display === 'flex') {
+    // Si le clic n'est ni dans le panneau, ni sur le bouton loupe
+    if (!panel.contains(event.target) && (!btn || !btn.contains(event.target))) {
+      panel.style.display = 'none';
+      
+      // Vider le champ texte à la fermeture
+      var input = document.getElementById('mobileSearchInput');
+      if (input) input.value = '';
+    }
+  }
+});
+
+// ---- 2. Recherche globale ----
+var searchTimeout = null;
+
+function globalSearch(query) {
+  // On annule la recherche précédente si l'utilisateur continue de taper
+  clearTimeout(searchTimeout);
+  
+  var q = query.trim();
+  if (q.length === 0) {
+    return;
+  }
+
+  // On attend 300ms après la dernière touche tapée avant de lancer la requête API
+  searchTimeout = setTimeout(async function() {
+    var view = document.getElementById('view');
+    if (!view) return;
+
+    // Ajustement de la mise en page en format centré
+    if (window.setLayout) window.setLayout('centered');
+
+    // Écran de chargement fluide
+    view.innerHTML = `
+      <div class="card" style="text-align: center; padding: 48px; color: var(--color-text-muted);">
+        <i class="ph ph-circle-notch" style="font-size: 32px; display: inline-block; animation: spin 1s linear infinite;"></i>
+        <p style="margin-top: 16px; font-weight: 500;">Recherche de "${q}" sur Lien...</p>
+      </div>
+    `;
+
+    try {
+      // Appel vers le point d'accès API
+      var data = await apiCall('search/global.php?q=' + encodeURIComponent(q));
+      
+      if (!data.success) throw new Error();
+
+      // Rendu HTML pour les membres trouvés
+      var usersHTML = '';
+      if (data.users && data.users.length > 0) {
+        data.users.forEach(function(u) {
+          usersHTML += `
+            <div class="people-card" style="border-bottom: 1px solid var(--color-border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img class="avatar" src="${avatarUrl(u.avatar)}" width="40" height="40">
+                <div class="info">
+                  <div class="name" style="margin: 0; font-weight: 600;">${u.first_name} ${u.last_name}</div>
+                  <div class="sub" style="margin: 0;">${u.online ? '<span style="color:var(--color-success)">En ligne</span>' : 'Hors ligne'}</div>
+                </div>
+              </div>
+              <button class="btn btn-ghost btn-profile-click" style="padding: 6px 12px;" data-id="${u.id}">Voir le profil</button>
+            </div>
+          `;
+        });
+      } else {
+        usersHTML = '<p style="padding: 24px; color: var(--color-text-muted); font-size: var(--fs-sm); text-align: center;">Aucun membre trouvé.</p>';
+      }
+
+      // Rendu HTML pour les publications trouvées
+      var postsHTML = '';
+      if (data.posts && data.posts.length > 0) {
+        data.posts.forEach(function(p) {
+          postsHTML += `
+            <div class="card post" style="margin-bottom: 16px; padding: 16px;">
+              <div class="post-header">
+                <img class="avatar" src="${avatarUrl(p.author.avatar)}" width="36" height="36">
+                <div class="post-author">
+                  <div class="name">${p.author.first_name} ${p.author.last_name}</div>
+                  <div class="meta">${typeof timeAgo === 'function' ? timeAgo(p.created_at) : p.created_at}</div>
+                </div>
+              </div>
+              <div class="post-body" style="margin-top: 12px;">
+                <p>${p.content}</p>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        postsHTML = '<p style="padding: 16px; color: var(--color-text-muted); font-size: var(--fs-sm); text-align: center;">Aucune publication trouvée.</p>';
+      }
+
+      // Injection finale structurée des résultats
+      view.innerHTML = `
+        <div style="margin-bottom: var(--space-5);">
+          <h2 style="font-size: var(--fs-xl); margin-bottom: 4px;">Résultats pour "${q}"</h2>
+        </div>
+
+        <div class="card" style="margin-bottom: var(--space-5);">
+          <div style="padding: 14px 16px; border-bottom: 1px solid var(--color-border); font-weight: 700; font-size: var(--fs-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Membres</div>
+          <div>${usersHTML}</div>
+        </div>
+
+        <div>
+          <h3 style="font-size: var(--fs-sm); margin-bottom: 12px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Publications</h3>
+          <div>${postsHTML}</div>
+        </div>
+      `;
+
+
+      view.querySelectorAll('.btn-profile-click').forEach(function(btn) {
+        btn.onclick = function(e) {
+          e.preventDefault();
+          var userId = this.getAttribute('data-id');
+          
+          // Note : Ton routeur possède deux routes : 'profil' et 'profil-public'.
+          // Si tu visites le compte de QUELQU'UN D'AUTRE, utilise 'profil-public' à la place de 'profil' si nécessaire !
+          Router.navigate('profil-public', { id: userId });
+        };
+      });
+
+    } catch (err) {
+      console.error(err);
+      view.innerHTML = `
+        <div class="card" style="padding: 32px; text-align: center; color: var(--color-danger);">
+          <i class="ph ph-warning-octagon" style="font-size: 32px;"></i>
+          <p style="margin-top: 12px; font-weight: 600;">Une erreur est survenue lors de la recherche.</p>
+        </div>
+      `;
+
+    }
+  }, 300);
+}
+
+// ---- Init ----
+// ---- Init ----
+updateNotifBadge();
+updateMessageBadge(); // 🟢 Initialisation du compteur de messages au chargement
+setInterval(updateNotifBadge, 30000);
+setInterval(updateMessageBadge, 30000); // 🟢 Vérification automatique toutes les 30 secondes
+Router.init();
+</script>
+</body>
+</html>

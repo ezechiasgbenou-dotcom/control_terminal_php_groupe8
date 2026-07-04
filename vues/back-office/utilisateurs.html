@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Utilisateurs — Back-office Lien</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../../assets/css/variables.css">
+<link rel="stylesheet" href="../../assets/css/main.css">
+<link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+<div class="bo-wrap">
+  <aside class="bo-sidebar">
+    <div class="bo-logo">Lien<span class="dot">.</span></div>
+    <span class="bo-role-tag" id="roleTag">—</span>
+    <a href="tableau-de-bord.html" class="bo-link"><i class="ph ph-gauge"></i> Tableau de bord</a>
+    <a href="utilisateurs.html" class="bo-link active"><i class="ph ph-users"></i> Utilisateurs</a>
+    <a href="publications.html" class="bo-link"><i class="ph ph-newspaper"></i> Publications</a>
+    <a href="moderateurs.html" class="bo-link" id="staffLink" style="display:none"><i class="ph ph-shield-star"></i> Équipe</a>
+    <div class="bo-spacer"></div>
+    <button class="bo-link" style="border:none; background:none; width:100%; text-align:left" onclick="logout()"><i class="ph ph-sign-out"></i> Déconnexion</button>
+  </aside>
+
+  <main class="bo-main">
+    <div class="bo-header">
+      <div>
+        <h1>Utilisateurs</h1>
+        <p>Consultez, suspendez ou supprimez des comptes</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <table class="bo-table">
+        <thead><tr><th>Utilisateur</th><th>E-mail</th><th>Statut</th><th>Inscrit le</th><th>Actions</th></tr></thead>
+        <tbody id="usersBody">
+          <tr><td colspan="5" style="text-align:center; color:var(--color-text-muted); padding:32px">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="../../assets/js/interactions.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script>
+const staff = requireStaffAuth();
+document.getElementById('roleTag').textContent = staff.role === 'admin' ? 'Administrateur' : 'Modérateur';
+if (staff.role === 'admin') document.getElementById('staffLink').style.display = 'flex';
+
+async function loadUsers(){
+  try{
+    const { users } = await apiCall('admin/users.php');
+    const body = document.getElementById('usersBody');
+    if (users.length === 0){ body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--color-text-muted)">Aucun utilisateur.</td></tr>`; return; }
+    body.innerHTML = '';
+    users.forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><div class="user-cell"><img class="avatar" src="${avatarUrl(u.avatar)}" width="34" height="34" alt="">
+          <span>${u.first_name} ${u.last_name}</span></div></td>
+        <td>${u.email}</td>
+        <td><span class="pill ${u.status}">${u.status === 'active' ? 'Actif' : 'Suspendu'}</span></td>
+        <td>${new Date(u.created_at.replace(' ','T')).toLocaleDateString('fr-FR')}</td>
+        <td class="bo-actions-cell">
+          ${u.status === 'active'
+            ? `<button class="btn btn-ghost bo-btn-sm" onclick="action(${u.id},'ban',this)">Suspendre</button>`
+            : `<button class="btn btn-primary bo-btn-sm" onclick="action(${u.id},'unban',this)">Réactiver</button>`}
+          <button class="btn btn-ghost bo-btn-sm" style="color:var(--color-danger)" onclick="action(${u.id},'delete',this)">Supprimer</button>
+        </td>`;
+      body.appendChild(tr);
+    });
+  }catch(err){ showToast(err.message, 'ph-warning-circle'); }
+}
+
+async function action(userId, act, btn){
+  if (act === 'delete' && !confirm('Supprimer définitivement ce compte ?')) return;
+  btn.disabled = true;
+  try{
+    await apiCall('admin/users.php', { method:'POST', body:{ user_id:userId, action:act } });
+    showToast('Action effectuée', 'ph-check-circle');
+    loadUsers();
+  }catch(err){ showToast(err.message, 'ph-warning-circle'); btn.disabled = false; }
+}
+
+loadUsers();
+</script>
+</body>
+</html>

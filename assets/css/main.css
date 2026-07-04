@@ -1,0 +1,1385 @@
+/* ============================================
+   LIEN — Styles globaux & composants
+   ============================================ */
+*,*::before,*::after{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  font-size:var(--fs-base);
+  color:var(--color-text);
+  background:var(--color-bg);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{ font-family:var(--font-display); margin:0; color:var(--color-primary); }
+p{ margin:0; }
+a{ color:var(--color-link); text-decoration:none; }
+a:hover{ color:var(--color-link-hover); }
+button{ font-family:inherit; cursor:pointer; }
+img{ max-width:100%; display:block; }
+ul{ margin:0; padding:0; list-style:none; }
+
+::selection{ background:var(--color-accent-soft); color:var(--color-primary); }
+
+:focus-visible{
+  outline:2px solid var(--color-link);
+  outline-offset:2px;
+  border-radius:4px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+}
+
+/* ---------- Boutons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--space-2);
+  border:none; border-radius:var(--radius-sm);
+  font-weight:600; font-size:var(--fs-sm);
+  padding:10px 18px;
+  transition:transform var(--transition), background var(--transition), box-shadow var(--transition);
+}
+.btn:active{ transform:scale(0.97); }
+.btn-primary{ background:var(--color-primary); color:var(--color-text-inverse); }
+.btn-primary:hover{ background:var(--color-primary-light); }
+.btn-accent{ background:var(--color-accent); color:#fff; }
+.btn-accent:hover{ background:var(--color-accent-hover); }
+.btn-ghost{ background:transparent; color:var(--color-text-secondary); border:1px solid var(--color-border-strong); }
+.btn-ghost:hover{ background:var(--color-surface-alt); color:var(--color-text); }
+.btn-link{ background:none; color:var(--color-link); padding:6px 8px; font-weight:600; }
+.btn-icon {
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  width: 38px; 
+  height: 38px; 
+  border-radius: var(--radius-full);
+  background: transparent; 
+  border: none; 
+  color: var(--color-text-secondary);
+  font-size: 20px; 
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* Optionnel : Un effet au survol pour savoir qu'on peut cliquer */
+.btn-icon:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+/* ---------- Champs de saisie ---------- */
+.field{ display:flex; flex-direction:column; gap:var(--space-1); margin-bottom:var(--space-4); }
+.field label{ font-size:var(--fs-sm); font-weight:600; color:var(--color-text-secondary); }
+.field input, .field textarea{
+  font-family:inherit; font-size:var(--fs-base);
+  padding:11px 14px; border-radius:var(--radius-sm);
+  border:1px solid var(--color-border-strong);
+  background:var(--color-surface);
+  color:var(--color-text);
+  transition:border-color var(--transition), box-shadow var(--transition);
+}
+.field input:focus, .field textarea:focus{
+  outline:none; border-color:var(--color-link);
+  box-shadow:0 0 0 3px rgba(46,111,149,0.15);
+}
+.field .hint{ font-size:var(--fs-xs); color:var(--color-text-muted); }
+.field .error{ font-size:var(--fs-xs); color:var(--color-danger); }
+
+/* ---------- Carte générique ---------- */
+.card{
+  background:var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-sm);
+}
+
+/* ---------- Avatar ---------- */
+.avatar{
+  position:relative; flex-shrink:0;
+  border-radius:var(--radius-full);
+  object-fit:cover; background:var(--color-surface-alt);
+}
+.avatar-status{
+  position:absolute; bottom:0; right:0;
+  width:11px; height:11px; border-radius:50%;
+  background:var(--color-text-muted);
+  border:2.5px solid var(--color-surface);
+}
+.avatar-status.online{ background:var(--color-success); }
+
+/* ---------- Barre de navigation ---------- */
+.navbar{
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  height:64px; padding:0 var(--space-5);
+  background:var(--color-surface);
+  border-bottom:1px solid var(--color-border);
+}
+.navbar-logo{
+  font-family:var(--font-display); font-weight:600; font-size:var(--fs-xl);
+  color:var(--color-primary); display:flex; align-items:center; gap:6px;
+  letter-spacing:-0.01em;
+}
+.navbar-logo .dot{ color:var(--color-accent); }
+.navbar-search{
+  display:flex; align-items:center; gap:8px;
+  background:var(--color-surface-alt); border-radius:var(--radius-full);
+  padding:9px 16px; width:280px; border:1px solid transparent;
+  transition:border-color var(--transition), background var(--transition);
+}
+.navbar-search:focus-within{ background:var(--color-surface); border-color:var(--color-border-strong); }
+.navbar-search input{ border:none; background:transparent; outline:none; flex:1; font-size:var(--fs-sm); }
+.navbar-search i{ color:var(--color-text-muted); }
+.navbar-actions{ display:flex; align-items:center; gap:var(--space-2); }
+.navbar-actions .btn-icon{ position:relative; }
+.badge{
+  position:absolute; top:2px; right:2px;
+  background:var(--color-accent); color:#fff;
+  font-size:10px; font-weight:700; line-height:1;
+  min-width:16px; height:16px; border-radius:var(--radius-full);
+  display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--color-surface);
+}
+
+/* ---------- Layout 3 colonnes ---------- */
+.layout{
+  display:grid;
+  grid-template-columns:260px minmax(0,600px) 300px;
+  gap:var(--space-5);
+  max-width:1200px; margin:0 auto;
+  padding:var(--space-5);
+}
+@media (max-width: 1080px){
+  .layout{ grid-template-columns:80px minmax(0,1fr); }
+  .col-right{ display:none; }
+}
+@media (max-width: 720px){
+  .layout{ grid-template-columns:1fr; padding:var(--space-3); }
+  .col-left{ display:none; }
+}
+
+.sidebar-link{
+  display:flex; align-items:center; gap:var(--space-3);
+  padding:10px 14px; border-radius:var(--radius-sm);
+  color:var(--color-text-secondary); font-weight:600; font-size:var(--fs-sm);
+  transition:background var(--transition), color var(--transition);
+}
+.sidebar-link i{ font-size:20px; }
+.sidebar-link:hover{ background:var(--color-surface-alt); color:var(--color-primary); }
+.sidebar-link.active{ background:var(--color-accent-soft); color:var(--color-accent-hover); }
+
+/* ---------- Composeur de publication ---------- */
+.composer{ padding:var(--space-4); margin-bottom:var(--space-4); }
+.composer-top{ display:flex; gap:var(--space-3); align-items:flex-start; }
+.composer textarea{
+  flex:1; resize:none; border:none; outline:none;
+  font-family:inherit; font-size:var(--fs-md); padding:10px 4px;
+  min-height:44px; background:transparent;
+}
+.composer textarea::placeholder{ color:var(--color-text-muted); }
+.composer-divider{ height:1px; background:var(--color-border); margin:var(--space-3) 0; }
+.composer-actions{ display:flex; justify-content:space-between; align-items:center; }
+.composer-tools{ display:flex; gap:4px; }
+
+/* ---------- Carte publication ---------- */
+.post{ padding:var(--space-4) var(--space-4) var(--space-3); margin-bottom:var(--space-4); position:relative; }
+.post-header{ display:flex; gap:var(--space-3); align-items:center; }
+.post-author{ flex:1; }
+.post-author .name{ font-weight:700; font-size:var(--fs-base); color:var(--color-text); }
+.post-author .meta{ font-size:var(--fs-xs); color:var(--color-text-muted); }
+.post-body{ margin:var(--space-3) 0; font-size:var(--fs-md); line-height:1.55; color:var(--color-text); }
+.post-image{ border-radius:var(--radius-sm); overflow:hidden; margin-bottom:var(--space-3); border:1px solid var(--color-border); }
+.post-stats{
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:var(--fs-xs); color:var(--color-text-muted);
+  padding-bottom:var(--space-2); border-bottom:1px solid var(--color-border);
+}
+.post-stats .reactions{ display:flex; align-items:center; gap:4px; }
+.reaction-bubble{
+  width:18px; height:18px; border-radius:50%;
+  background:var(--color-accent); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:11px;
+  border:2px solid var(--color-surface);
+}
+.post-buttons{ display:flex; padding-top:var(--space-1); }
+.post-action{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:9px 0; border-radius:var(--radius-sm); border:none; background:transparent;
+  font-weight:600; font-size:var(--fs-sm); color:var(--color-text-secondary);
+  transition:background var(--transition), color var(--transition);
+}
+.post-action:hover{ background:var(--color-surface-alt); }
+.post-action i{ font-size:19px; transition:transform 220ms cubic-bezier(.34,1.56,.64,1); }
+.post-action.liked{ color:var(--color-accent); }
+.post-action.liked i{ transform:scale(1.15); }
+.post-action.like-pop i{ animation:likePop 420ms cubic-bezier(.34,1.56,.64,1); }
+@keyframes likePop{
+  0%{ transform:scale(1); }
+  35%{ transform:scale(1.5) rotate(-8deg); }
+  60%{ transform:scale(0.92); }
+  100%{ transform:scale(1.15); }
+}
+
+/* particules de like */
+.like-burst{ position:absolute; pointer-events:none; }
+.like-burst span{
+  position:absolute; font-size:10px; color:var(--color-accent);
+  opacity:0; animation:burst 600ms ease-out forwards;
+}
+@keyframes burst{
+  0%{ opacity:1; transform:translate(0,0) scale(0.4); }
+  100%{ opacity:0; transform:translate(var(--dx), var(--dy)) scale(1); }
+}
+
+/* ---------- Commentaires ---------- */
+.comments{ margin-top:var(--space-3); display:none; }
+.comments.open{ display:block; animation:slideDown 220ms ease; }
+@keyframes slideDown{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
+.comment{ display:flex; gap:10px; margin-bottom:var(--space-3); }
+.comment-bubble{
+  background:var(--color-surface-alt); border-radius:var(--radius-md);
+  padding:8px 14px; font-size:var(--fs-sm);
+}
+.comment-bubble .name{ font-weight:700; font-size:var(--fs-xs); display:block; margin-bottom:2px; color:var(--color-text); }
+.comment-form{
+  display:flex; align-items:center; gap:10px; margin-top:var(--space-2);
+  background:var(--color-surface-alt); border-radius:var(--radius-full); padding:6px 6px 6px 16px;
+}
+.comment-form input{
+  flex:1; border:none; background:transparent; outline:none; font-size:var(--fs-sm); padding:6px 0;
+}
+.comment-form button{
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:var(--color-link); color:#fff; display:flex; align-items:center; justify-content:center;
+  transition:background var(--transition), transform var(--transition);
+}
+.comment-form button:hover{ background:var(--color-link-hover); }
+.comment-form button:active{ transform:scale(0.9); }
+
+/* ---------- Carte ami / suggestion ---------- */
+.people-card{ padding:var(--space-3); display:flex; align-items:center; gap:10px; }
+.people-card .info{ flex:1; min-width:0; }
+.people-card .name{ font-weight:600; font-size:var(--fs-sm); color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.people-card .sub{ font-size:var(--fs-xs); color:var(--color-text-muted); }
+
+/* ---------- Lien de connexion (motif signature) ---------- */
+.link-thread{ position:relative; }
+.link-thread::before{
+  content:''; position:absolute; left:24px; top:48px; bottom:-16px; width:2px;
+  background:linear-gradient(var(--color-border), transparent);
+}
+.link-thread:last-child::before{ display:none; }
+
+/* ---------- Scrollbar discrète ---------- */
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:var(--color-border-strong); border-radius:4px; }
+::-webkit-scrollbar-track{ background:transparent; }
+
+/* ---------- Skeleton de chargement ---------- */
+.skeleton{
+  background:linear-gradient(90deg, var(--color-surface-alt) 25%, var(--color-border) 37%, var(--color-surface-alt) 63%);
+  background-size:400% 100%; animation:shimmer 1.4s ease infinite; border-radius:var(--radius-sm);
+}
+@keyframes shimmer{ 0%{ background-position:100% 0; } 100%{ background-position:0 0; } }
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--color-primary); color:#fff; padding:12px 22px; border-radius:var(--radius-sm);
+  font-size:var(--fs-sm); font-weight:600; box-shadow:var(--shadow-lg);
+  opacity:0; pointer-events:none; transition:opacity 220ms ease, transform 220ms ease;
+  z-index:1000; display:flex; align-items:center; gap:8px;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+
+/* ============================================
+   Curseurs & états interactifs
+   ============================================ */
+/* Tout ce qui est cliquable montre le pointeur */
+button,
+.btn,
+.btn-icon,
+.sidebar-link,
+.profile-tab,
+.post-action,
+.conv,
+.tab,
+.auth-tabs button,
+.bo-link,
+.person-card .actions button,
+.person-card .actions a,
+label[for],
+label[style*="cursor"],
+.cover-edit,
+.profile-avatar-edit,
+.post-menu button,
+[onclick],
+select {
+  cursor: pointer;
+}
+
+/* Liens avatar cliquables */
+a .avatar,
+a > .avatar { cursor: pointer; }
+
+/* Liens de navigation */
+.sidebar-link,
+.navbar-logo,
+.people-card a,
+.conv { cursor: pointer; }
+
+/* Items désactivés */
+button:disabled,
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Hover sur les cartes de personnes */
+.people-card:has(a),
+.conv,
+.person-card {
+  transition: transform var(--transition);
+}
+.conv:hover { background: var(--color-surface-alt); }
+
+/* Hover sur les publications — highlight léger du header */
+.post-header a { transition: opacity var(--transition); }
+.post-header a:hover { opacity: 0.82; }
+
+/* Avatars liés */
+a > img.avatar { transition: box-shadow var(--transition); }
+a > img.avatar:hover { box-shadow: 0 0 0 3px var(--color-accent-soft); }
+
+/* Tabs interactifs */
+.profile-tab { cursor: pointer; transition: color var(--transition), border-color var(--transition); }
+.profile-tab:hover:not(.active) { color: var(--color-text); }
+.tab { cursor: pointer; }
+
+/* Post action buttons */
+.post-action { user-select: none; }
+.post-action:hover i { transform: scale(1.1); }
+.post-action .ph { transition: transform var(--transition); }
+
+/* Menu contextuel du post */
+.post-menu button { border-radius: var(--radius-sm); transition: background var(--transition); }
+.post-menu button:hover { background: var(--color-surface-alt); }
+
+/* Inputs et textareas */
+.field input,
+.field textarea,
+.field select,
+.comment-form input,
+.chat-input input,
+.navbar-search input {
+  cursor: text;
+}
+
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+
+   /* =======================================================
+   MENU DÉROULANT PROFIL (DROPDOWN)
+   ======================================================= */
+.profile-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.avatar-trigger:hover {
+  transform: scale(1.04);
+}
+
+/* Le conteneur principal du menu */
+.dropdown-menu-card {
+  display: none; /* Géré par le JS */
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 210px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  z-index: 1000;
+  overflow: hidden;
+  animation: dropdownSlideIn 0.2s ease-out;
+}
+
+/* En-tête du dropdown */
+.dropdown-menu-header {
+  padding: 12px 16px 8px 16px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dropdown-menu-list {
+  padding: 4px 0;
+}
+
+/* Les liens du menu */
+.dropdown-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: var(--color-text);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-menu-item i {
+  font-size: 1.25rem;
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+
+/* Effet de survol ultra propre */
+.dropdown-menu-item:hover {
+  background: var(--color-bg);
+  color: var(--color-link);
+}
+
+.dropdown-menu-item:hover i {
+  color: var(--color-link);
+}
+
+/* Animation fluide à l'apparition */
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ============================================
+   COMPOSANT PROFIL (Mon Profil & Profil Public)
+   ============================================ */
+.cover {
+  position: relative;
+  height: 280px;
+  background: var(--color-surface-alt);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: hidden;
+}
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cover-edit {
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: #fff !important;
+  border: none !important;
+  backdrop-filter: blur(4px);
+  padding: 8px 14px !important;
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 2;
+}
+.cover-edit:hover {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+.profile-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 0 24px;
+  margin-top: -60px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 10;
+}
+.profile-avatar-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: var(--radius-full);
+  border: 4px solid var(--color-surface);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
+}
+.profile-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+}
+.profile-avatar-edit {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: background var(--transition);
+  cursor: pointer;
+}
+.profile-avatar-edit:hover {
+  background: var(--color-primary-light);
+}
+.profile-meta {
+  flex: 1;
+  margin-bottom: 20px; /* Aligne la ligne de texte avec le bas du bouton */
+}
+.profile-meta h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+.profile-meta .sub {
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Neutralisation et alignement des boutons natifs du header */
+.profile-header .btn, 
+.profile-header #pubFriendActions {
+  margin-bottom: 20px !important;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
+  padding: 0 8px;
+}
+.profile-tab {
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+  border-bottom: 3px solid transparent;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+.profile-tab:hover {
+  color: var(--color-primary);
+}
+.profile-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.profile-body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-sm);
+}
+.info-row:last-child {
+  margin-bottom: 0;
+}
+.info-row i {
+  font-size: 18px;
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   FIX DESKTOP : NETTOYAGE ET POSITIONNEMENT DE LA NAVBAR
+   ========================================================================== */
+
+
+/* 2. Alignement parfait de la barre supérieure sur ordinateur */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Sépare le logo à gauche et les actions à droite */
+  gap: 24px;
+  padding: 0 24px;
+  height: 64px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-search {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9; /* Ou var(--color-bg-subtle) si tu as cette variable */
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  width: 280px;
+  
+  /*  margin-right: auto repousse tout le bloc d'icônes (.navbar-actions) vers la droite ! */
+  margin-right: auto; 
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Espace régulier entre tes icônes d'origine */
+}
+
+
+/* ============================================
+   RESPONSIVE TABLETTE & ÉCRANS MOYENS (< 880px) - VERSION FUSIONNÉE
+   ============================================ */
+
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 72px minmax(0,1fr); /* 🟢 !important supprimé ici pour laisser le JS agir */
+  }
+  .col-right { display: none !important; }
+  .sidebar-link span { display: none; }
+  .sidebar-link { justify-content: center; padding: 12px; }
+  .navbar-search { width: 200px; }
+}
+
+
+/* ============================================
+   SUPPRESSION SIDEBAR & PLEINE LARGEUR DES ÉLÉMENTS (< 1006px)
+   ============================================ */
+@media (max-width: 1006px) {
+  /* On force le layout à passer sur une seule colonne et on supprime les styles JS inline */
+  .layout {
+    grid-template-columns: 1fr !important;
+    padding: var(--space-3) !important;
+    gap: var(--space-4) !important;
+  }
+
+  /* Disparition complète de la sidebar gauche */
+  #sidebarLeft,
+  .col-left {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   CORRECTION FINALE : VERROUILLAGE ANTI-GLISSEMENT MOBILE
+   ============================================ */
+@media (max-width: 880px) {
+  
+  /* 1. On empêche strictement le HTML et le Body de glisser de gauche à droite */
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 2. Neutralisation radicale des marges/paddings desktop sur TOUS les wrappers possibles */
+  .app-container, 
+  .main-layout, 
+  .main-content, 
+  #main-content,
+  .content,
+  main,
+  wrapper {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* 3. Sécurisation de la structure du profil */
+  .cover,
+  .profile-header,
+  .profile-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .profile-body {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+
+  /* 4. LE FIX CRUCIAL POUR SAMSUNG : On force les onglets à défiler sans élargir l'écran */
+  .profile-tabs {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; /* Rend le slide au doigt ultra-fluide sur mobile */
+  }
+  
+  .profile-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-tab {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important; /* Empêche les onglets de s'écraser */
+  }
+
+  #layout, 
+  .layout, 
+  .main-layout,
+  [id*="layout"] {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr; /* 🟢 !important supprimé ici aussi */
+    padding: 12px !important;
+  }
+  #sidebarLeft { display: none !important; }
+  .navbar-search { display: none; }
+  .navbar { padding: 0 12px; }
+  .profile-header { flex-direction: column; align-items: flex-start; gap: 8px; margin-top: -40px; }
+  .profile-avatar-wrap { width: 100px; height: 100px; }
+  .profile-meta h1 { font-size: 1.4rem; }
+  .profile-tabs { overflow-x: auto; gap: 0; }
+  .profile-tab { white-space: nowrap; padding: 12px 14px; }
+  .profile-body { grid-template-columns: 1fr !important; }
+  .settings-wrap { grid-template-columns: 1fr !important; }
+
+  .chat-wrap { 
+    display: flex !important; 
+    flex-direction: column;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+  }
+
+  .chat-list { 
+    display: flex !important; 
+    flex-direction: column; 
+    flex: 1; 
+  }
+  .chat-main { 
+    display: none !important; 
+  }
+
+  .chat-wrap.show-chat .chat-list { 
+    display: none !important; 
+  }
+  .chat-wrap.show-chat .chat-main { 
+    display: flex !important; 
+    flex: 1; 
+    flex-direction: column;
+  }
+
+  .mobile-back-btn {
+    display: inline-flex !important;
+    margin-right: var(--space-2);
+  }
+  .composer textarea { font-size: 0.875rem; }
+  .post-buttons { gap: 0; }
+  .post-action span { display: none; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* On réduit la taille ou on masque la barre de recherche textuelle pour laisser de la place */
+  .navbar-search {
+    max-width: 140px; /* Aligne et réduit le champ de recherche */
+  }
+  
+  /* Optionnel : Si l'écran est vraiment très petit, on peut masquer l'input et ne garder que l'icône de recherche */
+  @media (max-width: 480px) {
+    .navbar-search input {
+      display: none;
+    }
+    .navbar-search {
+      padding: 8px;
+      border-radius: 50%;
+    }
+  }
+
+  /* On ajuste les espacements pour que les 5 éléments du haut respirent */
+  .navbar {
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+
+  .navbar-actions {
+    gap: 8px !important; /* Rapproche légèrement les icônes pour que tout tienne sur une ligne */
+  }
+  
+  /* On s'assure que la sidebar gauche reste cachée puisque tout est dans l'avatar désormais */
+  #sidebarLeft {
+    display: none !important;
+  }
+
+
+  /* Ajustements du Profil sur Mobile et écrans étroits */
+  .cover {
+    height: 160px;
+    border-radius: 0;
+  }
+  .cover-edit {
+    padding: 6px 10px !important;
+    font-size: var(--fs-xs) !important;
+    bottom: 8px !important;
+    right: 8px !important;
+  }
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -55px;
+    gap: 12px;
+    padding: 0 16px;
+  }
+  .profile-avatar-wrap {
+    width: 110px;
+    height: 110px;
+    border-width: 3px;
+  }
+  .profile-meta {
+    margin-bottom: 0;
+  }
+  .profile-meta h1 {
+    font-size: 1.4rem;
+  }
+  .profile-header .btn, .profile-header #pubFriendActions {
+    width: 100%;
+    margin-bottom: 10px !important;
+  }
+  #pubFriendActions {
+    justify-content: center;
+  }
+  .profile-tabs {
+    overflow-x: auto;
+    gap: 0;
+    scrollbar-width: none; /* Cache la barre de défilement sur Firefox */
+  }
+  .profile-tabs::-webkit-scrollbar {
+    display: none; /* Cache la barre de défilement sur Chrome/Safari */
+  }
+  .profile-tab {
+    white-space: nowrap;
+    padding: 12px 16px;
+    flex: 1;
+    text-align: center;
+  }
+  .profile-body {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+}
+  
+
+/* ============================================
+   AJUSTEMENTS DE CENTRAGE POUR PETITS MOBILES (< 600px)
+   ============================================ */
+@media (max-width: 600px) {
+  .cover {
+    height: 160px !important;
+    border-radius: 0 !important;
+  }
+
+  .profile-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin-top: -55px !important;
+    padding: 0 16px !important;
+    gap: 12px !important;
+  }
+
+  .profile-avatar-wrap {
+    width: 110px !important;
+    height: 110px !important;
+    border-width: 3px !important;
+  }
+
+  .profile-meta {
+    margin-bottom: 0 !important;
+    width: 100% !important;
+  }
+
+  .profile-meta h1 {
+    font-size: 1.4rem !important;
+  }
+
+  /* On force les boutons et actions à prendre 100% sans déborder */
+  .profile-header .btn, 
+  .profile-header #pubFriendActions {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .profile-header #pubFriendActions {
+    display: flex !important;
+    gap: 8px !important;
+  }
+}
+
+
+
+/* ==========================================================================
+   FIX DESKTOP : NETTOYAGE ET POSITIONNEMENT DE LA NAVBAR
+   ========================================================================== */
+
+/* 1. On cache les outils mobiles UNIQUEMENT quand on est sur ordinateur (écran > 500px) */
+@media (min-width: 501px) {
+  .mobile-search-btn,
+  .mobile-search-bar,
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+
+/* ============================================
+   BARRE DE NAVIGATION BASSE (MOBILE < 500px)
+   ============================================ */
+
+
+@media (max-width: 500px) {
+  
+  /* 1. On nettoie la barre du haut (Masquage Recherche + Icônes de navigation) */
+  .navbar-search,
+  .navbar-actions > a[data-page="accueil"],
+  .navbar-actions > a[data-page="amis"],
+  .navbar-actions > a[data-page="chat"],
+  .nav-notif-wrapper {
+    display: none !important;
+  }
+
+  /* On aligne proprement les éléments restants en haut : Logo | Déconnexion + Profil */
+  .navbar {
+    justify-content: space-between !important;
+    padding: 0 16px !important;
+  }
+  
+  .navbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  /* 2. Activation et fixation de la barre basse */
+  .mobile-nav {
+    display: flex !important; /* On l'affiche */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+    padding-bottom: env(safe-area-inset-bottom); /* Support dalles borderless */
+  }
+
+  /* Style des boutons de la barre basse */
+  .mobile-nav-item {
+    color: var(--color-text-secondary);
+    font-size: 24px; /* Plus grand pour un clic confortable au pouce */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    position: relative;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--color-accent-hover) !important;
+  }
+
+  /* Badge de notification pour la version mobile */
+  .mobile-nav-item .badge {
+    position: absolute;
+    top: 4px;
+    right: 12px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 2px solid var(--color-surface);
+  }
+
+  /* 3. Ajustement du panneau de notification (il s'ouvre maintenant vers le haut depuis le bas !) */
+  #notifPanel {
+    position: fixed !important;
+    bottom: 60px !important;
+    top: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: calc(100% - 24px) !important;
+    max-height: 360px !important;
+    border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.15) !important;
+  }
+
+  /* On ajoute une marge au corps de la page pour ne pas cacher le contenu derrière la barre fixe */
+  body {
+    padding-bottom: 72px !important;
+  }
+}/* ==========================================================================
+   DESIGN DES NOTIFICATIONS (Styles globaux - Adapté d'après ta capture)
+   ========================================================================== */
+.dynamic-notif-panel {
+  position: absolute;
+  right: 16px; /* Aligné proprement sous la zone des boutons de droite */
+  top: 64px;
+  width: 360px;
+  z-index: 999;
+  max-height: 480px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.notif-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.notif-panel-header span {
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--color-text-main);
+}
+
+.btn-link-clean {
+  background: none;
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-accent);
+  transition: all 0.2s ease;
+}
+
+.btn-link-clean:hover {
+  background: var(--color-border);
+}
+
+/* --- Style des lignes de notifications individuelles --- */
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.2s ease;
+  cursor: pointer;
+  align-items: center; /* Aligne l'avatar parfaitement avec le texte */
+}
+
+.notif-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.notif-item.unread {
+  background: rgba(var(--color-accent-rgb), 0.04);
+}
+
+.notif-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.notif-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.notif-text {
+  font-size: var(--fs-sm);
+  color: var(--color-text-main);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.notif-text strong {
+  font-weight: 700;
+  color: #0f172a; /* Fait ressortir le nom de la personne */
+}
+
+.notif-time {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+
+
+/* ==========================================================================
+   BARRE DE NAVIGATION BASSE & PANNEAU RESPONSIVE (MOBILE < 350px)
+   ========================================================================== */
+@media (max-width: 500px) {
+  
+  /* 1. Nettoyage de la barre du haut (Masquage Recherche + Icônes de navigation + Cloche supérieure) */
+  .navbar-search,
+  .navbar-actions > a[data-page="accueil"],
+  .navbar-actions > a[data-page="amis"],
+  .navbar-actions > a[data-page="chat"],
+  .desktop-notif-btn {
+    display: none !important;
+  }
+
+  /* Alignement propre du haut pour mobile : Logo à gauche | Déconnexion + Profil à droite */
+  .navbar {
+    justify-content: space-between !important;
+    padding: 0 16px !important;
+  }
+  
+  .navbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  /* 2. Activation et fixation de la barre basse */
+  .mobile-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+    padding-bottom: env(safe-area-inset-bottom); /* Gère les écrans borderless (iPhone/Android récents) */
+  }
+
+  /* Style des boutons tactiles de la barre basse */
+  .mobile-nav-item {
+    color: var(--color-text-secondary);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    position: relative;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--color-accent-hover) !important;
+  }
+
+  /* Badge de notification pour la version mobile */
+  .mobile-nav-item .badge {
+    position: absolute;
+    top: 4px;
+    right: 12px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 2px solid var(--color-surface);
+  }
+
+  /* 3. Transformation du panneau de notification en tiroir du bas (Bottom Sheet) */
+  .dynamic-notif-panel {
+    position: fixed !important;
+    bottom: 60px !important; /* Se cale pile au-dessus de la barre de navigation basse */
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-height: 65vh !important; /* Ne prend pas tout l'écran pour garder une vue sur le contexte arrière */
+    border-radius: 20px 20px 0 0 !important; /* Coins arrondis supérieurs style application native */
+    border: none !important;
+    border-top: 1px solid var(--color-border) !important;
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15) !important;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Confort d'espacement pour les clics sur mobile */
+  .notif-item {
+    padding: 16px !important;
+  }
+
+  .notif-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  /* Marge basse sur le body pour éviter que le contenu défilant soit masqué par la barre fixe */
+  body {
+    padding-bottom: 72px !important;
+  }
+
+  /* À ajouter à l'intérieur de ton @media (max-width: 500px) { ... } */
+
+/* On affiche le bouton loupe uniquement sur mobile */
+.mobile-search-btn {
+  display: flex !important;
+  color: var(--color-text-secondary);
+}
+
+/* Style du bandeau de recherche déroulant */
+.mobile-search-bar {
+  display: none; /* Géré par le JavaScript (flex) */
+  position: absolute;
+  top: 60px; /* Pile sous la navbar */
+  left: 0;
+  width: 100%;
+  background: var(--color-surface);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  gap: 10px;
+  align-items: center;
+  z-index: 98;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+
+.mobile-search-bar i {
+  color: var(--color-text-muted);
+  font-size: 18px;
+}
+
+.mobile-search-bar input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--fs-sm);
+  color: var(--color-text-main);
+}
+
+
+ .navbar-search {
+    display: none !important;
+  }
+  
+  .mobile-search-btn {
+    display: flex !important; /* Le bouton réapparaît au clic du pouce */
+    color: var(--color-text-secondary);
+  }
+}
+
+/* Animation fluide pour l'ouverture du tiroir mobile */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+/* Animation de rotation continue pour le chargement de la recherche */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.mobile-back-btn {
+  display: none !important;
+}
+
+.champ {
+  width: 100%;
+}
+
+
+.mobile-back-btn {
+  display: none !important;
+}
+
+/* Barre mobile masquée par défaut */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  #notifPanel {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 60px !important; /* Ajuste selon la hauteur de ta barre basse */
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 32px) !important;
+    max-width: 400px !important;
+    max-height: 70vh !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 16px !important;
+  }
+}

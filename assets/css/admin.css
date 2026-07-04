@@ -1,0 +1,46 @@
+/* ============================================
+   LIEN — Back-office
+   ============================================ */
+.bo-wrap{ display:grid; grid-template-columns:240px 1fr; min-height:100vh; }
+.bo-sidebar{
+  background:var(--color-primary); color:#fff; padding:var(--space-5) var(--space-4);
+  display:flex; flex-direction:column; gap:4px;
+}
+.bo-logo{ font-family:var(--font-display); font-size:1.5rem; font-weight:700; margin-bottom:var(--space-6); padding:0 8px; }
+.bo-logo .dot{ color:var(--color-accent); }
+.bo-link{
+  display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:var(--radius-sm);
+  color:#C7D3DE; font-weight:600; font-size:var(--fs-sm); transition:background var(--transition), color var(--transition);
+}
+.bo-link i{ font-size:19px; }
+.bo-link:hover{ background:rgba(255,255,255,0.06); color:#fff; }
+.bo-link.active{ background:var(--color-accent); color:#fff; }
+.bo-spacer{ flex:1; }
+.bo-role-tag{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:999px; display:inline-block; margin-bottom:var(--space-5); }
+
+.bo-main{ padding:var(--space-5) var(--space-6); }
+.bo-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-5); }
+.bo-header h1{ font-size:var(--fs-2xl); }
+.bo-header p{ color:var(--color-text-secondary); margin-top:4px; }
+
+.stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-4); margin-bottom:var(--space-5); }
+@media (max-width:900px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+.stat-card{ padding:var(--space-4); display:flex; flex-direction:column; gap:6px; }
+.stat-card .icon{ width:38px; height:38px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:4px; }
+.stat-card .value{ font-family:var(--font-display); font-size:1.8rem; color:var(--color-primary); }
+.stat-card .label{ font-size:var(--fs-xs); color:var(--color-text-muted); }
+
+.bo-table{ width:100%; border-collapse:collapse; }
+.bo-table th{ text-align:left; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--color-text-muted); padding:12px 16px; border-bottom:1px solid var(--color-border); }
+.bo-table td{ padding:12px 16px; border-bottom:1px solid var(--color-border); font-size:var(--fs-sm); vertical-align:middle; }
+.bo-table tr:last-child td{ border-bottom:none; }
+.bo-table .user-cell{ display:flex; align-items:center; gap:10px; }
+
+.pill{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:999px; font-size:var(--fs-xs); font-weight:600; }
+.pill.active{ background:#DEF4EB; color:var(--color-success); }
+.pill.banned{ background:#FBE4E4; color:var(--color-danger); }
+.pill.admin{ background:var(--color-accent-soft); color:var(--color-accent-hover); }
+.pill.moderator{ background:#E4ECF3; color:var(--color-link); }
+
+.bo-actions-cell{ display:flex; gap:6px; }
+.bo-btn-sm{ padding:6px 12px; font-size:var(--fs-xs); border-radius:6px; }

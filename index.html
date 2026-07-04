@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lien — Restez proche de ceux qui comptent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+  body{ background:var(--color-primary); }
+  .landing{
+    min-height:100vh; display:grid; grid-template-columns:1.1fr 1fr; align-items:center;
+  }
+  .landing-pitch{ color:#fff; padding:var(--space-7); position:relative; overflow:hidden; }
+  .landing-pitch .logo{ font-family:var(--font-display); font-size:2.6rem; font-weight:700; margin-bottom:var(--space-5); }
+  .landing-pitch .logo .dot{ color:var(--color-accent); }
+  .landing-pitch h1{ color:#fff; font-size:2.6rem; line-height:1.18; max-width:540px; }
+  .landing-pitch p{ color:#C7D3DE; font-size:var(--fs-md); margin-top:var(--space-4); max-width:480px; line-height:1.6; }
+  .thread-svg{ position:absolute; right:-60px; top:50%; transform:translateY(-50%); opacity:0.35; }
+
+  .landing-panel{
+    background:var(--color-bg); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:var(--space-5);
+  }
+  .auth-card{ width:100%; max-width:400px; }
+  .auth-tabs{ display:flex; background:var(--color-surface-alt); border-radius:var(--radius-full); padding:4px; margin-bottom:var(--space-5); }
+  .auth-tabs button{
+    flex:1; border:none; background:transparent; padding:10px; border-radius:var(--radius-full);
+    font-weight:600; font-size:var(--fs-sm); color:var(--color-text-secondary); transition:background var(--transition), color var(--transition);
+  }
+  .auth-tabs button.active{ background:var(--color-surface); color:var(--color-primary); box-shadow:var(--shadow-sm); }
+  .auth-form{ display:none; }
+  .auth-form.active{ display:block; animation:slideDown 220ms ease; }
+  .auth-foot{ text-align:center; font-size:var(--fs-xs); color:var(--color-text-muted); margin-top:var(--space-4); }
+  .password-row{ display:flex; justify-content:space-between; align-items:center; }
+  .password-row a{ font-size:var(--fs-xs); font-weight:600; }
+
+  @media (max-width:880px){
+    .landing{ grid-template-columns:1fr; }
+    .landing-pitch{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="landing">
+  <div class="landing-pitch">
+    <div class="logo">Lien<span class="dot">.</span></div>
+    <h1>Restez proche de ceux qui comptent vraiment.</h1>
+    <p>Partagez vos moments, retrouvez vos amis et échangez en temps réel — dans un espace pensé pour les conversations qui durent.</p>
+    <svg class="thread-svg" width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="60" cy="80" r="6" fill="#E8772E"/>
+      <circle cx="220" cy="40" r="6" fill="#fff" fill-opacity="0.5"/>
+      <circle cx="350" cy="150" r="6" fill="#fff" fill-opacity="0.5"/>
+      <circle cx="120" cy="280" r="6" fill="#E8772E"/>
+      <circle cx="300" cy="340" r="6" fill="#fff" fill-opacity="0.5"/>
+      <path d="M60 80 C 140 60, 160 30, 220 40 C 290 55, 300 110, 350 150 C 300 200, 180 220, 120 280 C 200 320, 260 320, 300 340"
+        stroke="#fff" stroke-opacity="0.25" stroke-width="1.5" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="landing-panel">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="active" onclick="switchAuth(this,'login')">Connexion</button>
+        <button onclick="switchAuth(this,'register')">Inscription</button>
+      </div>
+
+      <!-- Formulaire de connexion -->
+      <form class="auth-form active card" id="login" style="padding:var(--space-5)" onsubmit="handleLogin(event)">
+        <div class="field">
+          <label>Adresse e-mail</label>
+          <input type="email" required placeholder="vous@exemple.com">
+        </div>
+        <div class="field">
+          <div class="password-row"><label>Mot de passe</label><a href="vues/clients/mot-de-passe-oublie.html">Mot de passe oublié ?</a></div>
+          <input type="password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+        <p class="auth-foot">Espace administration ? <a href="vues/back-office/connexion.html">Accéder au back-office</a></p>
+      </form>
+
+      <!-- Formulaire d'inscription -->
+      <form class="auth-form card" id="register" style="padding:var(--space-5)" onsubmit="handleRegister(event)">
+        <div style="display:flex; gap:12px">
+          <div class="field" style="flex:1"><label>Prénom</label><input type="text" class="champ" required></div>
+          <div class="field" style="flex:1"><label>Nom</label><input type="text" class="champ" required></div>
+        </div>
+        <div class="field">
+          <label>Adresse e-mail</label>
+          <input type="email" required placeholder="vous@exemple.com">
+        </div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" required placeholder="8 caractères minimum">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
+        <p class="auth-foot">En vous inscrivant, un e-mail de confirmation vous sera envoyé.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/interactions.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+// Si déjà connecté, direction l'accueil
+if (getToken() && getStoredUser()) window.location.href = 'app.html';
+
+function switchAuth(btn, id){
+  document.querySelectorAll('.auth-tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+async function handleLogin(e){
+  e.preventDefault();
+  const form = e.target;
+  const [email, password] = form.querySelectorAll('input');
+  const btn = form.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Connexion…';
+  try{
+    const data = await apiCall('auth/login.php', { method:'POST', body:{ email: email.value, password: password.value } });
+    setSession(data.token, data.user);
+    window.location.href = 'app.html';
+  }catch(err){
+    showToast(err.message, 'ph-warning-circle');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+}
+
+async function handleRegister(e){
+  e.preventDefault();
+  const form = e.target;
+  const inputs = form.querySelectorAll('input');
+  const [firstName, lastName, email, password] = inputs;
+  const btn = form.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Création…';
+  try{
+    const data = await apiCall('auth/register.php', { method:'POST', body:{
+      first_name: firstName.value, last_name: lastName.value, email: email.value, password: password.value
+    }});
+    showToast(data.message, 'ph-check-circle');
+    form.reset();
+    document.querySelector('.auth-tabs button').click();
+  }catch(err){
+    showToast(err.message, 'ph-warning-circle');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Créer mon compte';
+  }
+}
+</script>
+</body>
+</html>

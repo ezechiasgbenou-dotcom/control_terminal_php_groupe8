@@ -1,0 +1,10 @@
+.env
+assets/uploads/avatars/*
+assets/uploads/covers/*
+assets/uploads/posts/*
+assets/uploads/chat/*
+!assets/uploads/avatars/.gitkeep
+!assets/uploads/covers/.gitkeep
+!assets/uploads/posts/.gitkeep
+!assets/uploads/chat/.gitkeep
+.DS_Store
