@@ -21,3 +21,4 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
           server-dir: /www/  # Dossier racine obligatoire chez Alwaysdata
+          secure: true
