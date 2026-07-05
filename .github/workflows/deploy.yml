@@ -3,22 +3,21 @@ name: Déploiement Continu Alwaysdata
 on:
   push:
     branches:
-      - main  # Le déploiement se déclenche automatiquement à chaque push sur la branche main
+      - main
 
 jobs:
   web-deploy:
-    name:  Déploiement vers le serveur
+    name: Déploiement vers le serveur
     runs-on: ubuntu-latest
     steps:
-      - name:  Récupération du code actuel
+      - name: Récupération du code actuel
         uses: actions/checkout@v4
 
-      - name:  Synchronisation des fichiers vers Alwaysdata
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Synchronisation sécurisée via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.FTP_SERVER }}
+          host: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
-          server-dir: /www/  # Dossier racine obligatoire chez Alwaysdata
-          protocol: ftps
+          localDir: '.'
+          remoteDir: 'www'
